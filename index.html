@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" type="image/x-icon" href="img/favicon/favicon.ico">
+    <link rel="stylesheet" type="text/css" href="styles.css">
+    <title>Billy Chatbot</title>
+
+    <script src="jquery.min.js"></script>
+    <script src="ejemplo.js"></script>
+</head>
+
+<body>
+    <div class="content">
+        <!--Barra lateral-->
+        <div class="lateral">
+            <div id="presentacion">
+                <img src="img/favicon/logosinfondo.png" alt="Billy">
+                <h1>Mecani</h1>
+            </div>
+
+            <h2>Conversaciones</h2>
+
+            <div id="chats">
+                <ul>
+                    <img src="img/favicon/messageicon.png" alt="Chaticon">
+                    <li>Chat con Messi</li>
+                    <img src="img/favicon/messageicon.png" alt="Chaticon">
+                    <li>Chat con el papa</li>
+                    <img src="img/favicon/messageicon.png" alt="Chaticon">
+                    <li>Chat con James</li>
+                </ul>
+
+            </div>
+
+            <div id="credits">
+                <h4>Hecho por Sebastián Ruiz &copy;</h4>
+            </div>
+        </div>
+
+
+
+
+        <!--Fin de barra lateral-->
+
+
+        <!--Inicio del main board-->
+        <!--Barra superior con logos-->
+        <div class="board">
+            <div id="titular">
+                <h2>AI Chatbot</h2>
+
+                <div id="logos">
+                    <img src="img/favicon/logoUTP.png" alt="LogoUTP" id="logoutp">
+                    <img src="img/favicon/logoMecatronica.png" alt="IngMecatronica" id="logomecatronica">
+                </div>
+            </div>
+            <!--Fin de la barra superior con logos-->
+
+            <!--Inicio de la estructura de chat-->
+
+            <div id="chat">
+
+
+            </div>
+
+            <!--Fin de la estructura de chat-->
+
+
+            <!--Inicio del Input-->
+
+            <div id="campo-de-texto">
+                <form action="">
+                    <div id="divInput">
+                        <input type="text" placeholder="Acá ingresarás las preguntas que le harás a Mecani...">
+                    </div>
+                    <div id="divButton">
+                        <button id="enviar" disabled><img id="iconoEnviar" src="img/favicon/iconoenviar.png" alt="IconoEnvio"></button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!--Fin del input-->
+    </div>
+</body>
+
+</html>
