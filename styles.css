@@ -1,3 +1,4 @@
+@charset "UTF-8";
 @font-face {
   font-family: "Geist";
   src: url(fonts/Geist-Regular.ttf);
@@ -284,10 +285,10 @@
 
 @media (max-width: 1400px) {
   .lateral {
-    width: 15%;
+    width: 20%;
   }
   .board {
-    width: 85%;
+    width: 75%;
   }
   .lateral #chats ul li {
     font-size: 12px;
@@ -308,11 +309,104 @@
 @media (max-width: 1190px) {
   .lateral {
     width: 20%;
-    height: 91vh;
   }
   .board {
     width: 80%;
-    height: 91vh;
+  }
+}
+@media (max-width: 950px) {
+  .lateral {
+    width: 25%;
+  }
+  .board {
+    width: 75%;
+  }
+}
+@media (max-width: 800px) {
+  .lateral {
+    width: 30%;
+  }
+  .board {
+    width: 70%;
+  }
+}
+@media (max-width: 700px) {
+  .lateral {
+    width: 35%;
+  }
+  .board {
+    width: 65%;
+  }
+}
+@media (max-width: 390px) {
+  .lateral {
+    background-color: #ffffff;
+    width: 100%; /* Ajusta el ancho para pantallas pequeñas */
+    position: absolute;
+    top: 0;
+    left: 0;
+    height: 50px; /* Ajusta la altura para que no tape otros elementos */
+    overflow: hidden; /* Oculta el contenido que exceda la altura */
+    display: flex; /* Usa flexbox para alinear elementos */
+    align-items: center; /* Alinea verticalmente al centro */
+    justify-content: center; /* Centra el contenido horizontalmente */
+  }
+  .lateral #chats, .lateral h2, .lateral #credits {
+    display: none;
+  }
+  .lateral #presentacion {
+    display: flex; /* Usa flexbox para alinear elementos */
+    align-items: center; /* Alinea verticalmente al centro */
+    justify-content: center; /* Centra el contenido horizontalmente */
+    position: relative;
+    width: auto;
+  }
+  .lateral #presentacion img {
+    padding-left: 0px;
+  }
+  .lateral #presentacion h1 {
+    padding-left: 0px;
+  }
+  .lateral #presentacion h2 {
+    margin: 0; /* Elimina el margen del título */
+  }
+  .lateral #presentacion .logo {
+    margin-left: 10px; /* Añade un margen a la izquierda de las imágenes de logos */
+  }
+  .board {
+    width: 100%; /* Ajusta el ancho del board */
+    margin-top: 60px;
+  }
+  .board #titular {
+    min-height: 30px;
+    margin: 0px auto;
+    display: flex; /* Usa flexbox para alinear los logos */
+    align-items: center; /* Alinea verticalmente al centro */
+    justify-content: center; /* Centra los logos horizontalmente */
+    margin-top: 10px; /* Añade un margen superior para separar del título */
+  }
+  .board #titular #logos #logoutp {
+    width: 50px;
+    height: 30px;
+  }
+  .board #titular #logos #logomecatronica {
+    width: 50px;
+    height: 40px;
+  }
+  .board #titular h2 {
+    display: none;
+  }
+  .board #chat #cuadrodetexto {
+    max-width: 80%; /* Aumenta el ancho de los cuadros de texto */
+  }
+  .board #chat .humano #cuadrodetexto {
+    margin: 10px 10px 10px 0;
+  }
+  .board #chat .humano #imagendehumano {
+    margin-top: 10px;
+  }
+  .board #chat .robot #cuadrodetexto {
+    max-width: 65%;
   }
 }
 
