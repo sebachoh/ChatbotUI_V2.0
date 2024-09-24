@@ -470,6 +470,10 @@
     .board {
       width: 100%; /* Ajusta el ancho del board */
       margin-top: 60px;
+
+      #campo-de-texto{
+        width: 85%;
+      }
       
       
       #titular{

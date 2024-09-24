@@ -377,6 +377,9 @@
     width: 100%; /* Ajusta el ancho del board */
     margin-top: 60px;
   }
+  .board #campo-de-texto {
+    width: 85%;
+  }
   .board #titular {
     min-height: 30px;
     margin: 0px auto;
