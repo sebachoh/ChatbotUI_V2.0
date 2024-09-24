@@ -81,7 +81,7 @@
 .lateral #credits {
   margin: 0 auto;
   width: 85%;
-  height: 2%;
+  padding-bottom: 25px;
 }
 .lateral #credits h4 {
   font-family: "Geist";
@@ -309,7 +309,11 @@
 @media (max-width: 1185px) {
   .lateral {
     width: 20%;
-    height: 100vh;
+    height: 100zvh;
+  }
+  .lateral #credits {
+    height: 0;
+    padding-bottom: 15px;
   }
   .board {
     height: 91vh;
