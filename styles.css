@@ -309,7 +309,7 @@
 @media (max-width: 1185px) {
   .lateral {
     width: 20%;
-    height: 100zvh;
+    height: 100vh;
   }
   .lateral #credits {
     height: 0;
