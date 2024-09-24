@@ -352,6 +352,15 @@
   }
 }
 @media (max-width: 440px) {
+  .board #campo-de-texto form #divInput input[type=text] {
+    font-size: 16px;
+  }
+  .board #campo-de-texto form #divButton {
+    width: 0%;
+  }
+  .board #campo-de-texto form #divButton button {
+    margin-left: -5px;
+  }
   .lateral {
     background-color: #ffffff;
     width: 100%; /* Ajusta el ancho para pantallas pequeñas */
@@ -389,6 +398,9 @@
   .board {
     width: 100%; /* Ajusta el ancho del board */
     margin-top: 60px;
+  }
+  .board #chat {
+    height: 85%;
   }
   .board #campo-de-texto {
     width: 85%;
