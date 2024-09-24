@@ -306,12 +306,21 @@
     font-size: 10px;
   }
 }
-@media (max-width: 1190px) {
+@media (max-width: 1185px) {
   .lateral {
     width: 20%;
+    height: 100vh;
   }
   .board {
+    height: 91vh;
     width: 80%;
+  }
+  .board #campo-de-texto form #divInput input[type=text] {
+    width: 95%;
+  }
+  .board #campo-de-texto form #divButton button {
+    margin-top: 13px;
+    margin-left: -20px;
   }
 }
 @media (max-width: 950px) {
