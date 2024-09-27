@@ -37,12 +37,13 @@
         a{
             text-decoration: none;
             color: black;
+            h1 {
+                font-family: 'Geist';
+                font-size: 40px;
+                padding-left: 60px;
+            }
         }
-        h1 {
-            font-family: 'Geist';
-            font-size: 40px;
-            padding-left: 60px;
-        }
+
     }
 
     h2 {

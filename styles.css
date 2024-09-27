@@ -37,7 +37,7 @@
   text-decoration: none;
   color: black;
 }
-.lateral #presentacion h1 {
+.lateral #presentacion a h1 {
   font-family: "Geist";
   font-size: 40px;
   padding-left: 60px;
