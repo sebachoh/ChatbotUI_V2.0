@@ -79,6 +79,7 @@
   transition: all 200ms;
 }
 .lateral #chats ul li .accion-btn {
+  color: black;
   font-family: "Geist";
   font-weight: bold;
   font-size: 15px;
