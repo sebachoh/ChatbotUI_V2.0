@@ -100,4 +100,16 @@ $(document).ready(function() {
     $('#limpiar-chat').on('click', function(event) {
         location.reload();
     });
+
+    //crea una funcion con el boton "compartir enlace" para copiar el enlace de la pagina web
+    $('#compartir-enlace').on('click', function(event) {
+        var copyText = window.location.href;
+        navigator.clipboard.writeText(copyText);
+        alert("Enlace copiado: " + copyText);
+    });
+
+    //crea una funcion para abrir un link cuando oprimas el boton wsp
+    $('#wsp').on('click', function(event) {
+        window.open("https://wa.me/573216067542");
+    });
 });
