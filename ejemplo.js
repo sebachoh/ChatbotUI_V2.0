@@ -96,4 +96,8 @@ $(document).ready(function() {
         }
         type(); // Inicia la máquina de escribir
     }
+
+    $('#limpiar-chat').on('click', function(event) {
+        location.reload();
+    });
 });

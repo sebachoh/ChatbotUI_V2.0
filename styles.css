@@ -33,6 +33,10 @@
   height: 50px;
   float: left;
 }
+.lateral #presentacion a {
+  text-decoration: none;
+  color: black;
+}
 .lateral #presentacion h1 {
   font-family: "Geist";
   font-size: 40px;
@@ -74,6 +78,17 @@
   border-radius: 5px;
   transition: all 200ms;
 }
+.lateral #chats ul li .accion-btn {
+  font-family: "Geist";
+  font-weight: bold;
+  font-size: 15px;
+  display: block; /* Makes the button a block element */
+  width: 100%; /* Full width to cover the li */
+  border: none; /* Remove default button border */
+  background: transparent; /* Make background transparent */
+  text-align: left; /* Align text to the left */
+  cursor: pointer; /* Change cursor to pointer */
+}
 .lateral #chats ul li:hover {
   background-color: #dbdbe7;
   cursor: pointer;
@@ -110,10 +125,13 @@
   line-height: 90px;
 }
 .board #titular #logos #logoutp {
+  padding-bottom: 7px;
+  padding-right: 30px;
   width: 100px;
   height: 60px;
 }
 .board #titular #logos #logomecatronica {
+  padding-right: 10px;
   width: 100px;
   height: 80px;
 }
@@ -309,14 +327,14 @@
 @media (max-width: 1185px) {
   .lateral {
     width: 20%;
-    height: 100vh;
+    height: 95vh;
   }
   .lateral #credits {
     height: 0;
     padding-bottom: 15px;
   }
   .board {
-    height: 80vh;
+    height: 84vh;
     width: 80%;
   }
   .board #campo-de-texto form #divInput input[type=text] {
@@ -327,7 +345,29 @@
     margin-left: -20px;
   }
 }
-@media (max-width: 950px) {
+@media (max-width: 844px) {
+  .board #chat .humano #cuadrodetexto {
+    margin: 15px 10px 15px 0;
+  }
+  .board #chat .humano #imagendehumano {
+    margin-top: 15px;
+  }
+  .board #chat .robot #cuadrodetexto {
+    max-width: 45%;
+    margin: 10px 0px 10px 70px;
+  }
+  .board #chat {
+    height: 70%;
+  }
+  .board #campo-de-texto form #divInput {
+    width: 90%;
+  }
+  .board #campo-de-texto form #divInput input[type=text] {
+    width: 90%;
+  }
+  .board #campo-de-texto form #divButton {
+    width: 10%;
+  }
   .lateral {
     width: 25%;
   }
@@ -335,12 +375,34 @@
     width: 75%;
   }
 }
-@media (max-width: 800px) {
+@media (max-width: 820px) {
+  .board #chat .humano #cuadrodetexto {
+    margin: 15px 10px 15px 0;
+  }
+  .board #chat .humano #imagendehumano {
+    margin-top: 15px;
+  }
+  .board #chat .robot #cuadrodetexto {
+    max-width: 45%;
+    margin: 10px 0px 10px 70px;
+  }
+  .board #chat {
+    height: 96%;
+  }
+  .board #campo-de-texto form #divInput {
+    width: 90%;
+  }
+  .board #campo-de-texto form #divInput input[type=text] {
+    width: 90%;
+  }
+  .board #campo-de-texto form #divButton {
+    width: 10%;
+  }
   .lateral {
-    width: 30%;
+    width: 25%;
   }
   .board {
-    width: 70%;
+    width: 75%;
   }
 }
 @media (max-width: 700px) {
@@ -351,9 +413,157 @@
     width: 65%;
   }
 }
-@media (max-width: 440px) {
+@media (max-width: 800px) {
+  .board #titular {
+    min-height: 55px;
+  }
+  .board #titular #logos #logoutp {
+    width: 70px;
+    height: 45px;
+    padding-bottom: 0px;
+  }
+  .board #titular #logos #logomecatronica {
+    width: 70px;
+    height: 45px;
+  }
+  .board #titular h2 {
+    line-height: 60px;
+  }
+  .board #chat .humano #cuadrodetexto {
+    margin: 15px 10px 15px 0;
+  }
+  .board #chat .humano #imagendehumano {
+    margin-top: 15px;
+  }
+  .board #chat .robot #cuadrodetexto {
+    max-width: 70%;
+    margin: 10px 0px 10px 70px;
+  }
+  .board #chat {
+    height: 60%;
+  }
+  .board #campo-de-texto form #divInput {
+    width: 90%;
+  }
+  .board #campo-de-texto form #divInput input[type=text] {
+    width: 90%;
+  }
+  .board #campo-de-texto form #divButton {
+    width: 10%;
+  }
+  .lateral h2 {
+    padding: 10px;
+  }
+  .lateral {
+    width: 25%;
+    height: 90vh;
+  }
+  .board {
+    width: 75%;
+  }
+}
+@media (max-width: 414px) {
   .board #campo-de-texto form #divInput input[type=text] {
     font-size: 16px;
+  }
+  .board #campo-de-texto form #divButton {
+    width: 0%;
+  }
+  .board #campo-de-texto form #divButton button {
+    margin-left: -5px;
+  }
+  .lateral {
+    background-color: #ffffff;
+    width: 100%; /* Ajusta el ancho para pantallas pequeñas */
+    position: absolute;
+    top: 0;
+    left: 0;
+    height: 40px; /* Ajusta la altura para que no tape otros elementos */
+    overflow: hidden; /* Oculta el contenido que exceda la altura */
+    display: flex; /* Usa flexbox para alinear elementos */
+    align-items: center; /* Alinea verticalmente al centro */
+    justify-content: center; /* Centra el contenido horizontalmente */
+  }
+  .lateral #chats, .lateral h2, .lateral #credits {
+    display: none;
+  }
+  .lateral #presentacion {
+    display: flex; /* Usa flexbox para alinear elementos */
+    align-items: center; /* Alinea verticalmente al centro */
+    justify-content: center; /* Centra el contenido horizontalmente */
+    position: relative;
+    width: auto;
+  }
+  .lateral #presentacion img {
+    padding-left: 0px;
+  }
+  .lateral #presentacion h1 {
+    padding-left: 0px;
+  }
+  .lateral #presentacion h2 {
+    margin: 0; /* Elimina el margen del título */
+  }
+  .lateral #presentacion .logo {
+    margin-left: 10px; /* Añade un margen a la izquierda de las imágenes de logos */
+  }
+  .board {
+    width: 100%;
+    height: 82vh;
+    margin-top: 55px;
+  }
+  .board #chat {
+    height: 100%;
+  }
+  .board #campo-de-texto {
+    width: 85%;
+  }
+  .board #titular {
+    width: 100%;
+    min-height: 30px;
+    margin: 0px auto;
+    position: absolute;
+    left: 50%;
+    top: 1%;
+    transform: translateX(-50%);
+    display: flex;
+    justify-content: center;
+  }
+  .board #titular #logos {
+    width: 100%;
+  }
+  .board #titular #logos #logoutp {
+    width: 55px;
+    height: 35px;
+    float: left;
+    padding-left: 15px;
+    padding-top: 3px;
+  }
+  .board #titular #logos #logomecatronica {
+    width: 50px;
+    height: 40px;
+    float: right;
+    padding-right: 15px;
+  }
+  .board #titular h2 {
+    display: none;
+  }
+  .board #chat #cuadrodetexto {
+    max-width: 80%; /* Aumenta el ancho de los cuadros de texto */
+  }
+  .board #chat .humano #cuadrodetexto {
+    margin: 10px 10px 10px 0;
+  }
+  .board #chat .humano #imagendehumano {
+    margin-top: 10px;
+  }
+  .board #chat .robot #cuadrodetexto {
+    max-width: 65%;
+  }
+}
+@media (max-width: 390px) {
+  .board #campo-de-texto form #divInput input[type=text] {
+    font-size: 16px;
+    width: 100%;
   }
   .board #campo-de-texto form #divButton {
     width: 0%;
@@ -401,7 +611,7 @@
     margin-top: 55px;
   }
   .board #chat {
-    height: 85%;
+    height: 93%;
   }
   .board #campo-de-texto {
     width: 85%;
