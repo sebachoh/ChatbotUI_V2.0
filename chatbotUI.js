@@ -2,7 +2,7 @@ $(document).ready(function() {
     var robotResponseCount = 0; // Contador respuestas.
 
     // Texto introductorio del robot
-    var introText = "Este es Mecani, tu asistente virtual para la carrera de Ingeniería Mecatrónica en la Universidad Tecnológica de Pereira. Aquí puedes consultar sobre microcurrículos, laboratorios, horarios, servicios disponibles y requisitos del programa. ¡Estoy aquí para responder todas tus preguntas y guiarte en lo que necesites!";
+    var introText = "Este es Mecani, tu asistente virtual para la carrera de Ingeniería Mecatrónica en la Universidad Tecnológica de Pereira...";
     
     // Agregar solo una vez el div del robot
     $('#chat').prepend('<div class="robot">' +
@@ -15,35 +15,32 @@ $(document).ready(function() {
                         '</div>');
 
     // Iniciar la máquina de escribir para el texto introductorio
-    typeWriter(introText, 'intro-text');
+    typeWriter(introText, 'intro-text', function() {
+        $('#enviar').prop('disabled', false); // Habilitar el botón después del texto introductorio
+    });
 
-    $('#enviar').on('click', function(event) {
+    $('#enviar').on('click', async function(event) {
         event.preventDefault(); // Previene el envío del formulario
         var inputText = $('#campo-de-texto input[type="text"]').val(); // Obtiene el texto del input
 
-        // Validación: Si el campo de texto está vacío, mostrar alerta y no continuar
         if (inputText.trim() === '') {
             $('#enviar').prop('disabled', false);
             return; // Detiene la ejecución si el campo está vacío
-        }
-        else{
-            $('#enviar').prop('disabled', true);
+        } else {
+            $('#enviar').prop('disabled', true); // Deshabilitar el botón mientras se procesa el mensaje
         }
 
-        // Limitar caracteres y agregar salto de línea
         var maxChars = 50; // Cantidad de caracteres antes del salto de línea
         var formattedText = '';
 
         if (inputText.length > maxChars) {
-            // Divide el texto en partes de máximo `maxChars`
             for (var i = 0; i < inputText.length; i += maxChars) {
-                formattedText += inputText.substring(i, i + maxChars) + '<br>'; // Salto de línea
+                formattedText += inputText.substring(i, i + maxChars) + '<br>';
             }
         } else {
-            formattedText = inputText; // Si no supera el límite, se muestra todo
+            formattedText = inputText;
         }
 
-        // Aquí se añade un nuevo div del humano con su nuevo mensaje
         var humanMessage = '<div class="humano">' +
                            '<div id="cuadrodetexto">' +
                            '<h2>' + formattedText + '</h2>' +
@@ -53,16 +50,14 @@ $(document).ready(function() {
                            '</div>' +
                            '</div>';
 
-        // Añadir el mensaje del humano al chat
         $('#chat').append(humanMessage);
+        $('#campo-de-texto input[type="text"]').val(''); // Limpiar input
 
-        // Limpiar el input
-        $('#campo-de-texto input[type="text"]').val('');
-
-        // Incrementar el contador de respuestas del robot
         robotResponseCount++;
 
-        // Aquí se añade un nuevo div del robot con una respuesta automática
+        // Llamar a la función de la API con el texto del usuario
+        const apiResponse = await sendChatCompletion(inputText);
+
         var robotMessage = '<div class="robot">' +
                             '<div id="imagenderobot">' +
                             '<img src="img/favicon/robotico.png" alt="IconoRobot" id="iconoderobot">' +
@@ -72,26 +67,27 @@ $(document).ready(function() {
                             '</div>' +
                             '</div>';
 
-        // Añadir el mensaje del robot debajo del mensaje del humano
         $('#chat').append(robotMessage);
 
         // Iniciar la máquina de escribir para la respuesta del robot
-        typeWriter("Respuesta automática del robot #" + robotResponseCount, 'robot-response-' + robotResponseCount);
+        typeWriter(apiResponse, 'robot-response-' + robotResponseCount, function() {
+            $('#enviar').prop('disabled', false); // Rehabilitar el botón de enviar cuando termine de escribir
+        });
     });
 
-    // Función de máquina de escribir
-    function typeWriter(textToType, elementId) {
+    function typeWriter(textToType, elementId, callback) {
         var index = 0;
         var speed = 10; // Velocidad de tipeo (milisegundos por letra)
     
         function type() {
             if (index < textToType.length) {
-                $('#' + elementId).append(textToType.charAt(index)); // Añade letra por letra
+                $('#' + elementId).append(textToType.charAt(index));
                 index++;
                 setTimeout(type, speed); // Llama a la función de nuevo
             } else {
-                // Habilita el botón de enviar cuando termine de escribir
-                $('#enviar').prop('disabled', false);
+                if (typeof callback === "function") {
+                    callback(); // Llama al callback cuando termina de escribir
+                }
             }
         }
         type(); // Inicia la máquina de escribir
@@ -101,15 +97,85 @@ $(document).ready(function() {
         location.reload();
     });
 
-    //crea una funcion con el boton "compartir enlace" para copiar el enlace de la pagina web
     $('#compartir-enlace').on('click', function(event) {
         var copyText = window.location.href;
         navigator.clipboard.writeText(copyText);
         alert("Enlace copiado: " + copyText);
     });
 
-    //crea una funcion para abrir un link cuando oprimas el boton wsp
     $('#wsp').on('click', function(event) {
         window.open("https://wa.me/573216067542");
     });
+
+    // Aquí integramos el segundo script para hacer la llamada a la API
+    const apiKey = '8RRQZYV-M8YM6K5-HMWY316-CVAHSW0';
+    const url = 'http://localhost:3001/api/v1/openai/chat/completions';
+
+    async function sendChatCompletion(userInput) {
+        const data = {
+            messages: [
+                {
+                    role: "system",
+                    content: "Tu nombre es Sandrita y eres una secretaria del programa de Ingeniería Mecatrónica..."
+                },
+                {
+                    role: "user",
+                    content: userInput // El input del usuario se inserta aquí
+                }
+            ],
+            model: "workspace1",
+            stream: true,
+            temperature: 0.7
+        };
+
+        try {
+            const response = await fetch(url, {
+                method: 'POST',
+                headers: {
+                    'Accept': '*/*',
+                    'Authorization': `Bearer ${apiKey}`,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(data)
+            });
+
+            if (!response.ok) {
+                throw new Error(`Error: ${response.statusText}`);
+            }
+
+            let fullResponseText = '';
+            const reader = response.body.getReader();
+            const decoder = new TextDecoder('utf-8');
+
+            while (true) {
+                const { done, value } = await reader.read();
+                if (done) break;
+                const chunk = decoder.decode(value, { stream: true });
+                fullResponseText += chunk;
+            }
+
+            const lines = fullResponseText.split('\n').filter(line => line.startsWith('data:'));
+            let combinedContent = '';
+
+            lines.forEach(line => {
+                const jsonPart = line.replace('data: ', '');
+                const jsonData = JSON.parse(jsonPart);
+
+                jsonData.choices.forEach(choice => {
+                    if (choice.delta && choice.delta.content) {
+                        combinedContent += choice.delta.content;
+                    }
+                });
+            });
+
+            const cleanedContent = combinedContent.replace(/(?:\\n|\s+)/g, ' ').trim();
+            console.log(cleanedContent); // Log para ver en terminal
+
+            return cleanedContent;
+
+        } catch (error) {
+            console.error('Error connecting to API:', error);
+            return "Hubo un error al conectar con la API.";
+        }
+    }
 });
