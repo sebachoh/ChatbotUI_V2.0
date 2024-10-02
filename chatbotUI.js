@@ -1,5 +1,6 @@
 $(document).ready(function() {
     var robotResponseCount = 0; // Contador respuestas.
+    var chatHistory = []; // Historial de chat para mantener el contexto
 
     // Texto introductorio del robot
     var introText = "Este es Mecani, tu asistente virtual para la carrera de Ingeniería Mecatrónica en la Universidad Tecnológica de Pereira...";
@@ -55,8 +56,14 @@ $(document).ready(function() {
 
         robotResponseCount++;
 
-        // Llamar a la función de la API con el texto del usuario
-        const apiResponse = await sendChatCompletion(inputText);
+        // Agregar el mensaje del usuario al historial
+        chatHistory.push({
+            role: "user",
+            content: inputText
+        });
+
+        // Llamar a la función de la API con el texto del usuario y el historial
+        const apiResponse = await sendChatCompletion(chatHistory);
 
         var robotMessage = '<div class="robot">' +
                             '<div id="imagenderobot">' +
@@ -72,6 +79,12 @@ $(document).ready(function() {
         // Iniciar la máquina de escribir para la respuesta del robot
         typeWriter(apiResponse, 'robot-response-' + robotResponseCount, function() {
             $('#enviar').prop('disabled', false); // Rehabilitar el botón de enviar cuando termine de escribir
+        });
+
+        // Agregar la respuesta del asistente al historial
+        chatHistory.push({
+            role: "assistant",
+            content: apiResponse
         });
     });
 
@@ -111,21 +124,18 @@ $(document).ready(function() {
     const apiKey = '8RRQZYV-M8YM6K5-HMWY316-CVAHSW0';
     const url = 'http://localhost:3001/api/v1/openai/chat/completions';
 
-    async function sendChatCompletion(userInput) {
+    async function sendChatCompletion(chatHistory) {
         const data = {
             messages: [
                 {
                     role: "system",
-                    content: "Tu nombre es Sandrita y eres una secretaria del programa de Ingeniería Mecatrónica..."
+                    content: "Tu nombre es Mecani y eres un asistente/secretario del programa de Ingeniería Mecatrónica, estás aquí para responder a todas las preguntas que pueda tener la comunidad educativa acerca del programa de Ingeniería Mecatrónica"
                 },
-                {
-                    role: "user",
-                    content: userInput // El input del usuario se inserta aquí
-                }
+                ...chatHistory // Incluir el historial de mensajes en la solicitud
             ],
             model: "workspace1",
             stream: true,
-            temperature: 0.7
+            temperature: 0.5
         };
 
         try {
