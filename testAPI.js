@@ -18,7 +18,7 @@ async function sendChatCompletion() {
             },
             {
                 role: "user",
-                content: "Cuántos laboratorios tiene la carrera de ingeniería Mecatrónica?"
+                content: "Quién eres?"
             }
         ],
         model: "workspace1", // Updated model to match the information you received
