@@ -131,7 +131,7 @@ $(document).ready(function() {
                     role: "system",
                     content: "Tu nombre es Mecani y eres un asistente/secretario del programa de Ingeniería Mecatrónica, estás aquí para responder a todas las preguntas que pueda tener la comunidad educativa acerca del programa de Ingeniería Mecatrónica"
                 },
-                ...chatHistory // Incluir el historial de mensajes en la solicitud
+                ...chatHistory
             ],
             model: "workspace1",
             stream: true,
