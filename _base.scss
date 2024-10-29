@@ -11,7 +11,7 @@
 }
 
 .content {
-    display: flex; /* Esto alinea la barra lateral y el board en una fila */
+    display: flex;
 }
 
 .lateral {
@@ -88,12 +88,12 @@
                     font-family: 'Geist';
                     font-weight: bold;
                     font-size: 15px;
-                    display: block; /* Makes the button a block element */
-                    width: 100%; /* Full width to cover the li */
-                    border: none; /* Remove default button border */
-                    background: transparent; /* Make background transparent */
+                    display: block; 
+                    width: 100%; 
+                    border: none; 
+                    background: transparent; 
                     text-align: left; /* Align text to the left */
-                    cursor: pointer; /* Change cursor to pointer */
+                    cursor: pointer; 
                 }
             }
 
@@ -293,16 +293,11 @@
     #campo-de-texto{
         min-height: 50px;
         border-top: 1px solid #f6f6f6;
-
-
         form{
-
             margin-left: 15px;
-
             #divInput{
                 float: left;
                 width: 95%;
-                
                 input[type=text]{
                     border: none;
                     background-color: #f3f4f6;
@@ -312,10 +307,8 @@
                     width: 100%;
                     height: 45px;
                     font-family: 'Geist';
-                }
-                
+                }             
             }
-
             #divButton{
                 float: right;
                 width: 5%;
@@ -343,22 +336,16 @@
                         height: 20px;
                     }
                 }
-    
                 button:hover {
                     background-color: #0a241f; /* Color al pasar el mouse */
                 }
-
                 button:disabled{
                     background-color: #000000;
                     color: #d6cdcd;
                     cursor: not-allowed;
-                }
-                
+                }   
             }
-
-
-
-            
+      
         }
     }
 }
@@ -397,7 +384,7 @@
         font-size: 10px;
     }
 }
-//ipad
+// iPad Air
 @media (max-width: 1185px){
     .lateral {
         width: 20%;
@@ -728,7 +715,7 @@
 @media (max-width: 390px) {
 
     .board #campo-de-texto form #divInput input[type=text] {
-        font-size: 16px; // Ensure font size is at least 16px
+        font-size: 16px;
         width: 100%;
     }
 
@@ -741,23 +728,23 @@
     }
     .lateral {
       background-color: #ffffff;
-      width: 100%; /* Ajusta el ancho para pantallas pequeñas */
+      width: 100%; 
       position: absolute;
       top: 0;
       left: 0;
-      height: 40px; /* Ajusta la altura para que no tape otros elementos */
-      overflow: hidden; /* Oculta el contenido que exceda la altura */
-      display: flex; /* Usa flexbox para alinear elementos */
-      align-items: center; /* Alinea verticalmente al centro */
-      justify-content: center; /* Centra el contenido horizontalmente */
+      height: 40px; 
+      overflow: hidden; 
+      display: flex; 
+      align-items: center; 
+      justify-content: center; 
       #chats, h2, #credits {
         display: none;
       }
   
       #presentacion {
-        display: flex; /* Usa flexbox para alinear elementos */
-        align-items: center; /* Alinea verticalmente al centro */
-        justify-content: center; /* Centra el contenido horizontalmente */
+        display: flex; 
+        align-items: center;
+        justify-content: center; 
         position: relative;
         width: auto;
       }
