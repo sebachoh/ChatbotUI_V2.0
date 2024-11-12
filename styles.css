@@ -109,7 +109,7 @@
 
 .board {
   width: 85%; /* Ajusta el ancho del board */
-  height: 89vh; /* Altura del 100% del viewport */
+  height: 100vh; /* Altura del 100% del viewport */
   background-color: #ffffff; /* Color de fondo para el board */
 }
 .board #titular {
