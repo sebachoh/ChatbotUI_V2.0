@@ -1,6 +1,6 @@
 $(document).ready(function() {
-    var robotResponseCount = 0; // Contador respuestas.
-    var chatHistory = []; // Historial de chat para mantener el contexto
+    var robotResponseCount = 0; // Contador
+    var chatHistory = []; // Arreglo donde ubica el historial del chat.
 
     // Texto introductorio del robot
     var introText = "Este es Mecani, tu asistente virtual para la carrera de Ingeniería Mecatrónica en la Universidad Tecnológica de Pereira...";
@@ -62,21 +62,23 @@ $(document).ready(function() {
             content: inputText
         });
 
+        // Mostrar mensaje temporal "Procesando respuesta..."
+        var processingMessage = '<div class="robot">' +
+        '<div id="imagenderobot">' +
+        '<img src="img/favicon/robotico.png" alt="IconoRobot" id="iconoderobot">' +
+        '</div>' +
+        '<div id="cuadrodetexto">' +
+        '<h2 id="robot-response-' + robotResponseCount + '"><div class="spinner"></div></h2>' +
+        '</div>' +
+        '</div>';
+
+        $('#chat').append(processingMessage);
+
         // Llamar a la función de la API con el texto del usuario y el historial
         const apiResponse = await sendChatCompletion(chatHistory);
 
-        var robotMessage = '<div class="robot">' +
-                            '<div id="imagenderobot">' +
-                            '<img src="img/favicon/robotico.png" alt="IconoRobot" id="iconoderobot">' +
-                            '</div>' +
-                            '<div id="cuadrodetexto">' +
-                            '<h2 id="robot-response-' + robotResponseCount + '"></h2>' +
-                            '</div>' +
-                            '</div>';
-
-        $('#chat').append(robotMessage);
-
-        // Iniciar la máquina de escribir para la respuesta del robot
+        // Reemplazar el mensaje temporal con la respuesta real
+        $('#robot-response-' + robotResponseCount).text(''); // Limpiar el mensaje temporal
         typeWriter(apiResponse, 'robot-response-' + robotResponseCount, function() {
             $('#enviar').prop('disabled', false); // Rehabilitar el botón de enviar cuando termine de escribir
         });

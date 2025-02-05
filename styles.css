@@ -660,5 +660,22 @@
     max-width: 65%;
   }
 }
+@keyframes spin {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+.spinner {
+  display: inline-block;
+  width: 30px; /* Tamaño del spinner */
+  height: 30px; /* Tamaño del spinner */
+  border: 3px solid #f3f3f3; /* Color del borde exterior */
+  border-top: 4px solid #000000; /* Color del borde superior (animado) */
+  border-radius: 50%; /* Hace que sea un círculo */
+  animation: spin 1s linear infinite; /* Aplica la animación */
+}
 
 /*# sourceMappingURL=styles.css.map */
