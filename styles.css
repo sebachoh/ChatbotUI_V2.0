@@ -137,7 +137,7 @@
   height: 80px;
 }
 .board #chat {
-  height: 78%;
+  height: 83%;
   max-width: 100%;
   flex-direction: column;
   overflow: hidden;
