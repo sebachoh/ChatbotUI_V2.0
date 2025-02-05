@@ -68,7 +68,7 @@ $(document).ready(function() {
         '<img src="img/favicon/robotico.png" alt="IconoRobot" id="iconoderobot">' +
         '</div>' +
         '<div id="cuadrodetexto">' +
-        '<h2 id="robot-response-' + robotResponseCount + '"><div class="spinner"></div></h2>' +
+        '<h2 id="robot-response-' + robotResponseCount + '"><div class="loading-rectangle"></div></h2>' +
         '</div>' +
         '</div>';
 

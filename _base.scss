@@ -833,17 +833,26 @@
     }
   }
 
-  @keyframes spin {
-    0% { transform: rotate(0deg); }
-    100% { transform: rotate(360deg); }
+  @keyframes loading {
+    0% { left: -100%; }
+    100% { left: 100%; }
 }
 
-.spinner {
-    display: inline-block;
-    width: 30px; /* Tamaño del spinner */
-    height: 30px; /* Tamaño del spinner */
-    border: 3px solid #f3f3f3; /* Color del borde exterior */
-    border-top: 4px solid #000000; /* Color del borde superior (animado) */
-    border-radius: 50%; /* Hace que sea un círculo */
-    animation: spin 1s linear infinite; /* Aplica la animación */
+.loading-rectangle {
+    position: relative;
+    width: 60px; /* Ancho del rectángulo */
+    height: 20px; /* Alto del rectángulo */
+    background-color: #f3f4f6; /* Fondo negro */
+    overflow: hidden; /* Oculta el contenido que se sale del rectángulo */
+
+    &::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: -100%; /* Comienza fuera del rectángulo */
+        width: 100%; /* Ancho del pseudo-elemento */
+        height: 100%; /* Alto del pseudo-elemento */
+        background: linear-gradient(90deg, transparent, #185046, transparent); /* Efecto de carga */
+        animation: loading 2s linear infinite; /* Aplica la animación */
+    }
 }
