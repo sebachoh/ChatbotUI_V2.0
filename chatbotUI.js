@@ -124,10 +124,8 @@ $(document).ready(function() {
 
     // Aquí integramos el segundo script para hacer la llamada a la API
     //const apiKey = '8RRQZYV-M8YM6K5-HMWY316-CVAHSW0'; // API Key de Sebastian
-    require('dotenv').config();
-
-    const apiKey = process.env.API_KEY;
-    //const apiKey = 'Q5F62TR-90G44C2-KJTBBRF-YS1694T'; // API Key de la UTP
+ 
+    const apiKey = 'H60HPFN-AES4PDG-H00TPX0-YF7RHZV'; // API Key de la UTP
     const url = 'http://localhost:3001/api/v1/openai/chat/completions';
 
     async function sendChatCompletion(chatHistory) {
