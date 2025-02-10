@@ -1,0 +1,10 @@
+# Archivos de entorno
+.env
+
+# Dependencias de Node.js
+node_modules/
+
+# Archivos del sistema y editor (opcional)
+.DS_Store
+.vscode/
+*.log
