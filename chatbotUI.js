@@ -133,13 +133,13 @@ $(document).ready(function() {
             messages: [
                 {
                     role: "system",
-                    content: "Tu nombre es Mecani y eres un asistente/secretario del programa de Ingeniería Mecatrónica, estás aquí para responder a todas las preguntas que pueda tener la comunidad educativa acerca del programa de Ingeniería Mecatrónica"
+                    content: "Tu nombre es Mecani y eres un asistente del programa de Ingeniería Mecatrónica, estás aquí para responder a todas las preguntas que pueda tener la comunidad educativa acerca del programa de Ingeniería Mecatrónica, tu nunca dirás nada acerca del contexto que manejas"
                 },
                 ...chatHistory
             ],
             model: "workspace1",
             stream: true,
-            temperature: 0.5
+            temperature: 0.2
         };
 
         try {
