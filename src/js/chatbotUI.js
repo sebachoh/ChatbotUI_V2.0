@@ -119,14 +119,104 @@ $(document).ready(function () {
     });
 
     $('#wsp').on('click', function (event) {
-        window.open("https://wa.me/573216067542");
+        window.open("https://www.linkedin.com/in/sebastianruizzuluaga-ingenieur/");
+    });
+
+    $('#exportar-pdf').on('click', function (event) {
+        console.log('Export button clicked');
+
+        // Check if libraries are loaded
+        if (typeof html2canvas === 'undefined') {
+            alert('Error: html2canvas no está cargado');
+            console.error('html2canvas is not loaded');
+            return;
+        }
+
+        if (typeof window.jspdf === 'undefined') {
+            alert('Error: jsPDF no está cargado');
+            console.error('jsPDF is not loaded');
+            return;
+        }
+
+        const element = document.getElementById('chat');
+        console.log('Starting PDF generation...');
+
+        // Use html2canvas to capture the chat area
+        html2canvas(element, {
+            scale: 2,
+            useCORS: true,
+            logging: true
+        }).then(canvas => {
+            console.log('Canvas created successfully');
+            const imgData = canvas.toDataURL('image/png');
+
+            // Create PDF using jsPDF
+            const { jsPDF } = window.jspdf;
+            const pdf = new jsPDF({
+                orientation: 'portrait',
+                unit: 'mm',
+                format: 'a4'
+            });
+
+            const imgWidth = 210; // A4 width in mm
+            const pageHeight = 297; // A4 height in mm
+            const imgHeight = (canvas.height * imgWidth) / canvas.width;
+            let heightLeft = imgHeight;
+            let position = 0;
+
+            // Add image to PDF
+            pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
+            heightLeft -= pageHeight;
+
+            // Add new pages if content is longer than one page
+            while (heightLeft > 0) {
+                position = heightLeft - imgHeight;
+                pdf.addPage();
+                pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
+                heightLeft -= pageHeight;
+            }
+
+            // Save the PDF
+            console.log('Saving PDF...');
+            pdf.save('mecani-chat.pdf');
+
+            console.log('PDF generated successfully');
+            alert('PDF generado exitosamente');
+        }).catch(error => {
+            console.error('Error generating PDF:', error);
+            alert('Error al generar el PDF: ' + error.message);
+        });
     });
 
     // Aquí integramos el segundo script para hacer la llamada a la API
-    //const apiKey = '8RRQZYV-M8YM6K5-HMWY316-CVAHSW0'; // API Key de Sebastian
+    let apiKey = ''; // AnythingLLM API Key
+    let geminiApiKey = ''; // Gemini API Key (para uso futuro)
+    let url = '';
 
-    const apiKey = '248N1TF-ZEA4753-HKK2S2S-S7TPYBN'; // API Key de la UTP
-    const url = 'http://localhost:3001/api/v1/openai/chat/completions';
+    // Cargar la configuración desde el backend
+    async function loadConfig() {
+        try {
+            const response = await fetch('http://localhost:3001/api/config');
+            const config = await response.json();
+
+            // Usar la API key de AnythingLLM para el chatbot
+            apiKey = config.apiKey;
+            geminiApiKey = config.geminiApiKey;
+            url = config.apiUrl;
+
+            console.log('Configuration loaded successfully');
+            console.log('Using AnythingLLM API');
+        } catch (error) {
+            console.error('Error loading config:', error);
+            // Fallback a valores por defecto si el servidor no está disponible
+            console.warn('Using fallback configuration');
+            apiKey = '248N1TF-ZEA4753-HKK2S2S-S7TPYBN';
+            url = 'http://localhost:3001/api/v1/openai/chat/completions';
+        }
+    }
+
+    // Cargar la configuración al inicio
+    loadConfig();
 
     async function sendChatCompletion(chatHistory) {
         const data = {
@@ -137,7 +227,7 @@ $(document).ready(function () {
                 },
                 ...chatHistory
             ],
-            model: "workspace1",
+            model: "Mecani",
             stream: true,
             temperature: 0.2
         };
@@ -189,7 +279,7 @@ $(document).ready(function () {
 
         } catch (error) {
             console.error('Error connecting to API:', error);
-            return "Hubo un error al conectar con la API.";
+            return "Gracias por tu intento, pero la API no está disponible actualmente.";
         }
     }
     // Sidebar Toggle Logic
