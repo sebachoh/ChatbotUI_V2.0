@@ -59,7 +59,7 @@
 
 .lateral #presentacion img {
   padding-left: 10px;
-  width: 50px;
+  width: 60px;
   height: 50px;
   float: left;
 }
@@ -120,7 +120,7 @@
 .lateral #chats ul li .accion-btn {
   color: black;
   font-family: "Geist";
-  font-weight: bold;
+  font-weight: normal;
   font-size: 15px;
   display: block;
   width: 100%;
