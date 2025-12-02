@@ -4,50 +4,55 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="icon" type="image/x-icon" href="img/favicon/favicon.ico">
-    <link rel="stylesheet" type="text/css" href="styles.css">
+    <link rel="icon" type="image/x-icon" href="src/assets/img/favicon/favicon.ico">
+    <link rel="stylesheet" type="text/css" href="src/css/styles.css">
     <title>Mecani Chatbot</title>
 
-    <script src="jquery.min.js"></script>
-    <script src="chatbotUI.js"></script>
+    <script src="src/js/jquery.min.js"></script>
+    <script src="src/js/chatbotUI.js"></script>
 </head>
 
 <body>
     <div class="content">
         <!--Barra lateral-->
-        <div class="lateral">
+        <div class="lateral" id="sidebar">
+            <button id="close-sidebar" class="mobile-only">&times;</button>
             <div id="presentacion">
-                <a href="#"><img src="img/favicon/logosinfondo.png " alt="Mecani"></a> 
-                <a href="#"><h1>Mecani</h1></a> 
+                <a href="#"><img src="src/assets/img/favicon/logosinfondo.png" alt="Mecani"></a>
+                <a href="#">
+                    <h1>Mecani</h1>
+                </a>
             </div>
 
             <h2>Acciones</h2>
 
             <div id="chats">
                 <ul>
-                    <img src="img/favicon/messageicon.png" alt="Chaticon">
+                    <img src="src/assets/img/favicon/messageicon.png" alt="Chaticon">
                     <li><button class="accion-btn" id="limpiar-chat">
-                        Limpiar chat
+                            Limpiar chat
                         </button>
                     </li>
-                    <img src="img/favicon/messageicon.png" alt="Chaticon">
+                    <img src="src/assets/img/favicon/messageicon.png" alt="Chaticon">
                     <li><button class="accion-btn" id="compartir-enlace">
-                        Compartir enlace
+                            Compartir enlace
                         </button>
                     </li>
-                    <img src="img/favicon/messageicon.png" alt="Chaticon">
+                    <img src="src/assets/img/favicon/messageicon.png" alt="Chaticon">
                     <li><button class="accion-btn" id="wsp">
-                        Soporte
+                            Soporte
                         </button>
                     </li>
                 </ul>
-
             </div>
 
             <div id="credits">
                 <h4>Hecho por Sebastián Ruiz &copy;</h4>
             </div>
         </div>
+
+        <!-- Mobile Overlay -->
+        <div id="mobile-overlay"></div>
 
 
 
@@ -59,11 +64,22 @@
         <!--Barra superior con logos-->
         <div class="board">
             <div id="titular">
+                <button id="hamburger-menu" class="mobile-only">
+                    <svg viewBox="0 0 24 24" width="24" height="24" stroke="currentColor" stroke-width="2" fill="none"
+                        stroke-linecap="round" stroke-linejoin="round">
+                        <line x1="3" y1="12" x2="21" y2="12"></line>
+                        <line x1="3" y1="6" x2="21" y2="6"></line>
+                        <line x1="3" y1="18" x2="21" y2="18"></line>
+                    </svg>
+                </button>
                 <h2>AI Chatbot</h2>
 
                 <div id="logos">
-                    <a href="https://utp.edu.co/" target="_blank"><img src="img/favicon/logoUTP.png" alt="LogoUTP" id="logoutp"></a>
-                    <a href="https://tecnologia.utp.edu.co/ingenieria-mecatronica/" target="_blank"><img src="img/favicon/logoMecatronica.png" alt="IngMecatronica" id="logomecatronica"></a> 
+                    <a href="https://utp.edu.co/" target="_blank"><img src="src/assets/img/favicon/logoUTP.png"
+                            alt="LogoUTP" id="logoutp"></a>
+                    <a href="https://tecnologia.utp.edu.co/ingenieria-mecatronica/" target="_blank"><img
+                            src="src/assets/img/favicon/logoMecatronica.png" alt="IngMecatronica"
+                            id="logomecatronica"></a>
                 </div>
             </div>
             <!--Fin de la barra superior con logos-->
@@ -86,7 +102,8 @@
                         <input type="text" placeholder="Pregúntale a Mecani...">
                     </div>
                     <div id="divButton">
-                        <button id="enviar" disabled><img id="iconoEnviar" src="img/favicon/iconoenviar.png" alt="IconoEnvio"></button>
+                        <button id="enviar" disabled><img id="iconoEnviar" src="src/assets/img/favicon/iconoenviar.png"
+                                alt="IconoEnvio"></button>
                     </div>
                 </form>
             </div>

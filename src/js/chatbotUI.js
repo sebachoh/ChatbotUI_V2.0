@@ -1,26 +1,26 @@
-$(document).ready(function() {
+$(document).ready(function () {
     var robotResponseCount = 0; // Contador
     var chatHistory = []; // Arreglo donde ubica el historial del chat.
 
     // Texto introductorio del robot
     var introText = "Este es Mecani, tu asistente virtual para la carrera de Ingeniería Mecatrónica en la Universidad Tecnológica de Pereira...";
-    
+
     // Agregar solo una vez el div del robot
     $('#chat').prepend('<div class="robot">' +
-                        '<div id="imagenderobot">' +
-                        '<img src="img/favicon/robotico.png" alt="IconoRobot" id="iconoderobot">' +
-                        '</div>' +
-                        '<div id="cuadrodetexto">' +
-                        '<h2 id="intro-text"></h2>' +
-                        '</div>' +
-                        '</div>');
+        '<div id="imagenderobot">' +
+        '<img src="src/assets/img/favicon/robotico.png" alt="IconoRobot" id="iconoderobot">' +
+        '</div>' +
+        '<div id="cuadrodetexto">' +
+        '<h2 id="intro-text"></h2>' +
+        '</div>' +
+        '</div>');
 
     // Iniciar la máquina de escribir para el texto introductorio
-    typeWriter(introText, 'intro-text', function() {
+    typeWriter(introText, 'intro-text', function () {
         $('#enviar').prop('disabled', false); // Habilitar el botón después del texto introductorio
     });
 
-    $('#enviar').on('click', async function(event) {
+    $('#enviar').on('click', async function (event) {
         event.preventDefault(); // Previene el envío del formulario
         var inputText = $('#campo-de-texto input[type="text"]').val(); // Obtiene el texto del input
 
@@ -43,13 +43,13 @@ $(document).ready(function() {
         }
 
         var humanMessage = '<div class="humano">' +
-                           '<div id="cuadrodetexto">' +
-                           '<h2>' + formattedText + '</h2>' +
-                           '</div>' +
-                           '<div id="imagendehumano">' +
-                           '<img src="img/favicon/iconhuman.png" alt="IconoHumano" id="iconodehumano">' +
-                           '</div>' +
-                           '</div>';
+            '<div id="cuadrodetexto">' +
+            '<h2>' + formattedText + '</h2>' +
+            '</div>' +
+            '<div id="imagendehumano">' +
+            '<img src="src/assets/img/favicon/iconhuman.png" alt="IconoHumano" id="iconodehumano">' +
+            '</div>' +
+            '</div>';
 
         $('#chat').append(humanMessage);
         $('#campo-de-texto input[type="text"]').val(''); // Limpiar input
@@ -64,13 +64,13 @@ $(document).ready(function() {
 
         // Mostrar mensaje temporal "Procesando respuesta..."
         var processingMessage = '<div class="robot">' +
-        '<div id="imagenderobot">' +
-        '<img src="img/favicon/robotico.png" alt="IconoRobot" id="iconoderobot">' +
-        '</div>' +
-        '<div id="cuadrodetexto">' +
-        '<h2 id="robot-response-' + robotResponseCount + '"><div class="loading-rectangle"></div></h2>' +
-        '</div>' +
-        '</div>';
+            '<div id="imagenderobot">' +
+            '<img src="src/assets/img/favicon/robotico.png" alt="IconoRobot" id="iconoderobot">' +
+            '</div>' +
+            '<div id="cuadrodetexto">' +
+            '<h2 id="robot-response-' + robotResponseCount + '"><div class="loading-rectangle"></div></h2>' +
+            '</div>' +
+            '</div>';
 
         $('#chat').append(processingMessage);
 
@@ -79,7 +79,7 @@ $(document).ready(function() {
 
         // Reemplazar el mensaje temporal con la respuesta real
         $('#robot-response-' + robotResponseCount).text(''); // Limpiar el mensaje temporal
-        typeWriter(apiResponse, 'robot-response-' + robotResponseCount, function() {
+        typeWriter(apiResponse, 'robot-response-' + robotResponseCount, function () {
             $('#enviar').prop('disabled', false); // Rehabilitar el botón de enviar cuando termine de escribir
         });
 
@@ -93,7 +93,7 @@ $(document).ready(function() {
     function typeWriter(textToType, elementId, callback) {
         var index = 0;
         var speed = 10; // Velocidad de tipeo (milisegundos por letra)
-    
+
         function type() {
             if (index < textToType.length) {
                 $('#' + elementId).append(textToType.charAt(index));
@@ -108,23 +108,23 @@ $(document).ready(function() {
         type(); // Inicia la máquina de escribir
     }
 
-    $('#limpiar-chat').on('click', function(event) {
+    $('#limpiar-chat').on('click', function (event) {
         location.reload();
     });
 
-    $('#compartir-enlace').on('click', function(event) {
+    $('#compartir-enlace').on('click', function (event) {
         var copyText = window.location.href;
         navigator.clipboard.writeText(copyText);
         alert("Enlace copiado: " + copyText);
     });
 
-    $('#wsp').on('click', function(event) {
+    $('#wsp').on('click', function (event) {
         window.open("https://wa.me/573216067542");
     });
 
     // Aquí integramos el segundo script para hacer la llamada a la API
     //const apiKey = '8RRQZYV-M8YM6K5-HMWY316-CVAHSW0'; // API Key de Sebastian
- 
+
     const apiKey = '248N1TF-ZEA4753-HKK2S2S-S7TPYBN'; // API Key de la UTP
     const url = 'http://localhost:3001/api/v1/openai/chat/completions';
 
@@ -192,4 +192,23 @@ $(document).ready(function() {
             return "Hubo un error al conectar con la API.";
         }
     }
+    // Sidebar Toggle Logic
+    const sidebar = $('#sidebar');
+    const overlay = $('#mobile-overlay');
+    const hamburgerBtn = $('#hamburger-menu');
+    const closeBtn = $('#close-sidebar');
+
+    function openSidebar() {
+        sidebar.addClass('active');
+        overlay.addClass('active');
+    }
+
+    function closeSidebar() {
+        sidebar.removeClass('active');
+        overlay.removeClass('active');
+    }
+
+    hamburgerBtn.on('click', openSidebar);
+    closeBtn.on('click', closeSidebar);
+    overlay.on('click', closeSidebar);
 });
