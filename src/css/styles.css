@@ -151,6 +151,14 @@
   color: rgb(61, 57, 57);
 }
 
+.lateral #credits a,
+.lateral #credits a:visited,
+.lateral #credits a:hover,
+.lateral #credits a:active {
+  text-decoration: none !important;
+  color: inherit !important;
+}
+
 .board {
   width: 85%;
   /* Ajusta el ancho del board */
