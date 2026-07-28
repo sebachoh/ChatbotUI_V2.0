@@ -2,58 +2,83 @@
 
 ## Configuración
 
-1. **Asegúrate de que tu archivo `.env` existe** en la raíz del proyecto con:
-   ```
-   # AnythingLLM API Key (usado para el chatbot)
-   API_KEY_LLM=tu-api-key-anythingllm-aqui
-   
-   # Gemini API Key (disponible para uso futuro)
-   API_KEY=tu-api-key-gemini-aqui
-   
-   # URL de la API
-   API_URL=http://localhost:3001/api/v1/openai/chat/completions
+1. **Copia el archivo de ejemplo** en la raíz del proyecto:
+
+   ```bash
+   cp .env.example .env
    ```
 
-2. **Instala las dependencias** (ya hecho):
+2. **Edita `.env`** con tus valores reales:
+
+   ```env
+   # Gemini API Key (Google AI Studio)
+   API_KEY=tu-api-key-gemini-aqui
+
+   # Token de acceso al chat (obligatorio en producción)
+   CHAT_API_TOKEN=genera-un-token-seguro-aqui
+
+   # Orígenes permitidos para CORS
+   ALLOWED_ORIGINS=https://mecani.onrender.com
+
+   # Entorno
+   NODE_ENV=production
+   ```
+
+   Para generar un token seguro:
+
+   ```bash
+   node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
+   ```
+
+3. **Instala las dependencias**:
+
    ```bash
    npm install
    ```
 
-3. **Inicia el servidor backend**:
+4. **Inicia el servidor**:
+
    ```bash
-   node server.js
+   npm start
    ```
-   
+
    Deberías ver: `Server running on http://localhost:3001`
 
-4. **En otra terminal, inicia el servidor frontend**:
-   ```bash
-   python3 -m http.server 8000
-   ```
-
-5. **Abre tu navegador** en `http://localhost:8000`
+5. **Abre tu navegador** en `http://localhost:3001`
 
 ## Cómo funciona
 
-- El archivo `server.js` lee las variables del `.env` usando `dotenv`
-- El endpoint `/api/config` devuelve la API key al frontend
-- `chatbotUI.js` hace una petición a este endpoint al cargar la página
-- Si el servidor no está disponible, usa valores por defecto (fallback)
+- `server.js` lee las variables del `.env` con `dotenv`.
+- La API key de Gemini **nunca** se expone al frontend.
+- El frontend obtiene un token de sesión desde `/api/session-token` (solo si el origen está permitido).
+- Las peticiones a `/api/chat` incluyen el header `X-Chat-Token` cuando `CHAT_API_TOKEN` está configurado.
+- `/api/config` devuelve solo metadatos públicos (estado, proveedor, documentos cargados).
 
 ## Seguridad
 
-✅ El `.env` está en `.gitignore` - nunca se subirá a Git
-✅ La API key solo se expone a través del servidor local
-✅ El frontend la obtiene de forma segura desde el backend
+- El `.env` está en `.gitignore` — nunca se sube a Git.
+- La API key de Gemini permanece solo en el servidor.
+- Rate limiting: 100 req/10 min en `/api/*`, 30 req/10 min en `/api/chat`.
+- CORS restrictivo con lista blanca de orígenes.
+- Validación de mensajes (roles, longitud, cantidad).
+- Helmet con Content Security Policy activa.
+- Scripts de CDN con Subresource Integrity (SRI).
+- Errores internos no se filtran al cliente.
+
+## Variables de entorno
+
+| Variable | Requerida | Descripción |
+|----------|-----------|-------------|
+| `API_KEY` | Sí | Clave de Google AI Studio (Gemini) |
+| `CHAT_API_TOKEN` | Producción | Token para proteger `/api/chat` |
+| `ALLOWED_ORIGINS` | No | Orígenes CORS permitidos (coma-separados) |
+| `NODE_ENV` | No | `production` en despliegue |
+| `PORT` | No | Puerto del servidor (default: 3001) |
 
 ## Scripts útiles
 
-Puedes agregar estos scripts a tu `package.json`:
-```json
-"scripts": {
-  "start": "node server.js",
-  "dev": "node server.js"
-}
+```bash
+npm start          # Inicia el servidor
+npm run dev        # Alias de start
+node scripts/ingest.js   # Regenera la base vectorial RAG
 ```
-
-Luego puedes usar: `npm start`

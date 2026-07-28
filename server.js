@@ -10,24 +10,18 @@ const { getEmbedding } = require('./src/rag/embeddings');
 
 const app = express();
 const PORT = process.env.PORT || 3001;
+const CHAT_API_TOKEN = process.env.CHAT_API_TOKEN;
 
-// Inicializar y cargar el motor RAG
+const MAX_MESSAGES = 50;
+const MAX_MESSAGE_LENGTH = 4000;
+const ALLOWED_ROLES = new Set(['user', 'assistant']);
+const ALLOWED_LANGUAGES = new Set(['Español', 'English', 'Français']);
+
+// Render y otros reverse proxies: usar IP real del cliente en rate limiting
+app.set('trust proxy', 1);
+
 const vectorStore = new VectorStore();
 
-// Seguridad: Añadir cabeceras HTTP de protección (XSS, Clickjacking, etc)
-app.use(helmet({
-    contentSecurityPolicy: false // Desactivado para no romper scripts externos sin configuración estricta
-}));
-
-// Seguridad: Prevenir ataques de fuerza bruta y abusos de API
-const apiLimiter = rateLimit({
-    windowMs: 10 * 60 * 1000, // 10 minutos
-    max: 100, // 100 peticiones por IP
-    message: { error: 'Se ha excedido el límite de consultas. Por favor, intenta de nuevo más tarde.' }
-});
-app.use('/api/', apiLimiter);
-
-// Seguridad: CORS estricto — solo orígenes explícitamente permitidos
 const normalizeOrigin = (origin) => origin.trim().replace(/\/+$/, '');
 
 const defaultAllowedOrigins = process.env.NODE_ENV === 'production'
@@ -42,100 +36,206 @@ const allowedOrigins = process.env.ALLOWED_ORIGINS
     ? process.env.ALLOWED_ORIGINS.split(',').map(normalizeOrigin)
     : defaultAllowedOrigins;
 
+function isAllowedOrigin(origin) {
+    return !origin || allowedOrigins.includes(normalizeOrigin(origin));
+}
+
+function isAllowedReferer(referer) {
+    if (!referer) return false;
+    try {
+        const origin = new URL(referer).origin;
+        return allowedOrigins.includes(normalizeOrigin(origin));
+    } catch {
+        return false;
+    }
+}
+
+function validateMessages(messages) {
+    if (!Array.isArray(messages)) {
+        return 'El campo messages debe ser un arreglo.';
+    }
+    if (messages.length === 0) {
+        return 'Se requiere al menos un mensaje.';
+    }
+    if (messages.length > MAX_MESSAGES) {
+        return `Máximo ${MAX_MESSAGES} mensajes por conversación.`;
+    }
+
+    for (const msg of messages) {
+        if (!msg || typeof msg !== 'object') {
+            return 'Formato de mensaje inválido.';
+        }
+        if (!ALLOWED_ROLES.has(msg.role)) {
+            return 'Rol de mensaje no permitido.';
+        }
+        if (typeof msg.content !== 'string') {
+            return 'El contenido del mensaje debe ser texto.';
+        }
+        if (msg.content.trim() === '') {
+            return 'Los mensajes no pueden estar vacíos.';
+        }
+        if (msg.content.length > MAX_MESSAGE_LENGTH) {
+            return `Cada mensaje admite máximo ${MAX_MESSAGE_LENGTH} caracteres.`;
+        }
+    }
+
+    return null;
+}
+
+function requireChatToken(req, res, next) {
+    if (!CHAT_API_TOKEN) {
+        return next();
+    }
+
+    const token = req.get('X-Chat-Token');
+    if (!token || token !== CHAT_API_TOKEN) {
+        return res.status(401).json({ error: 'No autorizado.' });
+    }
+
+    return next();
+}
+
+app.use(helmet({
+    contentSecurityPolicy: {
+        directives: {
+            defaultSrc: ["'self'"],
+            scriptSrc: ["'self'", 'https://cdnjs.cloudflare.com'],
+            styleSrc: ["'self'", "'unsafe-inline'"],
+            imgSrc: ["'self'", 'data:', 'https:'],
+            connectSrc: ["'self'"],
+            fontSrc: ["'self'"],
+            objectSrc: ["'none'"],
+            frameSrc: ["'none'"],
+            baseUri: ["'self'"],
+            formAction: ["'self'"]
+        }
+    }
+}));
+
+const apiLimiter = rateLimit({
+    windowMs: 10 * 60 * 1000,
+    max: 100,
+    standardHeaders: true,
+    legacyHeaders: false,
+    message: { error: 'Se ha excedido el límite de consultas. Por favor, intenta de nuevo más tarde.' }
+});
+
+const chatLimiter = rateLimit({
+    windowMs: 10 * 60 * 1000,
+    max: 30,
+    standardHeaders: true,
+    legacyHeaders: false,
+    message: { error: 'Se ha excedido el límite de mensajes. Por favor, intenta de nuevo más tarde.' }
+});
+
+app.use('/api/', apiLimiter);
+
 const corsOptions = {
     origin(origin, callback) {
-        // Peticiones same-origin o sin cabecera Origin (curl, health checks)
-        if (!origin || allowedOrigins.includes(normalizeOrigin(origin))) {
+        if (isAllowedOrigin(origin)) {
             return callback(null, true);
         }
         console.warn(`[CORS] Origen bloqueado: ${origin}`);
         return callback(null, false);
     },
     methods: ['GET', 'POST'],
-    allowedHeaders: ['Content-Type'],
-    maxAge: 86400 // cache preflight 24h
+    allowedHeaders: ['Content-Type', 'X-Chat-Token'],
+    maxAge: 86400
 };
 app.use(cors(corsOptions));
 
-// Seguridad: Limitar tamaño de body para prevenir ataques de saturación de memoria
 app.use(express.json({ limit: '100kb' }));
 app.use(express.static(__dirname));
 
-// Endpoint de estado de la aplicación (Sin exponer claves secretas)
 app.get('/api/config', (req, res) => {
     res.json({
         status: 'ok',
         service: 'Mecani Chatbot API Proxy with RAG',
         provider: 'Google AI Studio (Gemini)',
-        documentsLoaded: vectorStore.documents.length
+        documentsLoaded: vectorStore.documents.length,
+        authRequired: Boolean(CHAT_API_TOKEN)
     });
 });
 
-// Proxy seguro para la API de Gemini (Google AI Studio)
-app.post('/api/chat', async (req, res) => {
+app.get('/api/session-token', (req, res) => {
+    if (!CHAT_API_TOKEN) {
+        return res.json({ token: null });
+    }
+
+    const origin = req.get('Origin');
+    const referer = req.get('Referer');
+
+    if (!isAllowedOrigin(origin) && !isAllowedReferer(referer)) {
+        return res.status(403).json({ error: 'Origen no permitido.' });
+    }
+
+    return res.json({ token: CHAT_API_TOKEN });
+});
+
+app.post('/api/chat', chatLimiter, requireChatToken, async (req, res) => {
     try {
         const apiKey = process.env.API_KEY || process.env.API_KEY_LLM;
 
         if (!apiKey || apiKey.includes('tu-api-key')) {
-            return res.status(400).json({
-                error: 'La API_KEY de Gemini no está configurada en el archivo .env del servidor.'
+            return res.status(503).json({
+                error: 'El servicio no está configurado correctamente.'
             });
         }
 
-        const messages = req.body.messages || [];
+        const rawMessages = req.body.messages || [];
+        const validationError = validateMessages(rawMessages);
+        if (validationError) {
+            return res.status(400).json({ error: validationError });
+        }
+
         const language = req.body.language;
-        
-        // --- MOTOR RAG: Búsqueda de Contexto ---
+        if (language !== undefined && language !== null && !ALLOWED_LANGUAGES.has(language)) {
+            return res.status(400).json({ error: 'Idioma no soportado.' });
+        }
+
+        // El system prompt lo controla exclusivamente el servidor
+        const messages = rawMessages.filter((m) => m.role !== 'system');
+
         let contextText = '';
         if (messages.length > 0 && vectorStore.documents.length > 0) {
             try {
                 const lastUserMessage = messages[messages.length - 1].content;
                 const queryEmbedding = await getEmbedding(lastUserMessage, apiKey);
-                
+
                 if (queryEmbedding) {
                     const topResults = vectorStore.similaritySearch(queryEmbedding, 3);
                     if (topResults.length > 0) {
-                        contextText = "\n\n--- INFORMACIÓN OFICIAL PARA RESPONDER ---\n" +
-                            topResults.map(r => r.text).join("\n\n");
+                        contextText = '\n\n--- INFORMACIÓN OFICIAL PARA RESPONDER ---\n' +
+                            topResults.map((r) => r.text).join('\n\n');
                     }
                 }
             } catch (err) {
                 console.error('Error durante la búsqueda vectorial:', err);
-                // Si falla el RAG, continuamos sin contexto adicional
             }
         }
-        
-        // Leer el system prompt desde el archivo de configuración asíncronamente (evita bloquear el event loop)
-        let baseSystemPrompt = "Eres Mecani."; // Fallback
+
+        let baseSystemPrompt = 'Eres Mecani.';
         try {
             baseSystemPrompt = await fs.promises.readFile(path.join(__dirname, 'prompt.txt'), 'utf-8');
-        } catch(e) {
-            console.warn("No se pudo leer prompt.txt, usando fallback.");
+        } catch (e) {
+            console.warn('No se pudo leer prompt.txt, usando fallback.');
         }
 
-        // Crear el mensaje de sistema definitivo combinando personalidad y contexto
-        let finalSystemMessage = baseSystemPrompt + (contextText ? ("\n\n--- CONTEXTO OFICIAL ---\n" + contextText) : "");
-        
+        let finalSystemMessage = baseSystemPrompt + (contextText ? ('\n\n--- CONTEXTO OFICIAL ---\n' + contextText) : '');
+
         if (language) {
             finalSystemMessage += `\n\n--- INSTRUCCIÓN OBLIGATORIA ---\nDebes responder SIEMPRE a las preguntas del usuario en este idioma: ${language}. Si el usuario te habla en un idioma diferente, tradúcelo y respóndele en ${language}.`;
         }
-        
-        // Agregar o reemplazar el mensaje de sistema en la lista de mensajes
-        const systemMessageIndex = messages.findIndex(m => m.role === 'system');
-        if (systemMessageIndex !== -1) {
-            messages[systemMessageIndex].content = finalSystemMessage;
-        } else {
-            messages.unshift({ role: 'system', content: finalSystemMessage });
-        }
 
-        // Modelos a probar en orden (del mejor al más ligero para evitar cuotas)
+        messages.unshift({ role: 'system', content: finalSystemMessage });
+
         const fallbackModels = ['gemini-3.1-flash-lite', 'gemma-4-26b-a4b-it', 'gemini-2.5-flash', 'gemini-2.0-flash'];
         let lastError = null;
 
-        const systemMsg = messages.find(m => m.role === 'system')?.content || '';
+        const systemMsg = messages.find((m) => m.role === 'system')?.content || '';
         const userContents = messages
-            .filter(m => m.role !== 'system')
-            .map(m => ({
+            .filter((m) => m.role !== 'system')
+            .map((m) => ({
                 role: m.role === 'assistant' ? 'model' : 'user',
                 parts: [{ text: m.content }]
             }));
@@ -156,30 +256,27 @@ app.post('/api/chat', async (req, res) => {
                     const geminiData = await geminiRes.json();
                     const candidateText = geminiData.candidates?.[0]?.content?.parts?.[0]?.text || '';
                     return res.json({ content: candidateText });
-                } else {
-                    const errorData = await geminiRes.json();
-                    console.log(`[Error Payload] de ${model}:`, JSON.stringify(errorData));
-                    if (geminiRes.status === 429) {
-                        console.warn(`[Quota Exceeded] El modelo ${model} agotó la cuota. Pasando al siguiente modelo...`);
-                        lastError = new Error('Quota Exceeded');
-                        continue;
-                    }
-                    console.warn(`[API Error] Fallo con ${model}:`, errorData.error?.message);
-                    lastError = new Error(errorData.error?.message || `Error con ${model}`);
+                }
+
+                const errorData = await geminiRes.json();
+                console.log(`[Error Payload] de ${model}:`, JSON.stringify(errorData));
+                if (geminiRes.status === 429) {
+                    console.warn(`[Quota Exceeded] El modelo ${model} agotó la cuota. Pasando al siguiente modelo...`);
+                    lastError = new Error('Quota Exceeded');
                     continue;
                 }
+                console.warn(`[API Error] Fallo con ${model}:`, errorData.error?.message);
+                lastError = new Error(errorData.error?.message || `Error con ${model}`);
             } catch (err) {
                 console.warn(`Error de red/ejecución con el modelo ${model}:`, err.message);
                 lastError = err;
             }
         }
 
-        // Si todos los modelos fallan
-        throw new Error(`Todos los modelos de respaldo fallaron por cuota o indisponibilidad. Último error: ${lastError.message}`);
-
+        throw new Error(`Todos los modelos de respaldo fallaron. Último error: ${lastError?.message || 'desconocido'}`);
     } catch (error) {
         console.error('Error en el proxy de /api/chat:', error);
-        res.status(500).json({ error: error.message });
+        res.status(500).json({ error: 'Error interno del servidor. Intenta de nuevo más tarde.' });
     }
 });
 

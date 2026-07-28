@@ -1,6 +1,8 @@
 $(document).ready(function () {
     var robotResponseCount = 0; // Contador
     var chatHistory = []; // Arreglo donde ubica el historial del chat.
+    var chatApiToken = null;
+    const MAX_INPUT_LENGTH = 4000;
 
     const translations = {
         es: {
@@ -92,10 +94,24 @@ $(document).ready(function () {
     }
 
     // Habilitar/Deshabilitar botón de enviar dinámicamente según el texto del input
+    $('#campo-de-texto input[type="text"]').attr('maxlength', MAX_INPUT_LENGTH);
     $('#campo-de-texto input[type="text"]').on('input', function () {
         var text = $(this).val().trim();
         $('#enviar').prop('disabled', text === '');
     });
+
+    async function initChatSession() {
+        try {
+            const response = await fetch('/api/session-token');
+            if (!response.ok) return;
+            const data = await response.json();
+            chatApiToken = data.token || null;
+        } catch (error) {
+            console.warn('No se pudo obtener el token de sesión del chat.');
+        }
+    }
+
+    initChatSession();
 
     // Agregar solo una vez el div del robot
     $('#chat').prepend('<div class="robot">' +
@@ -121,6 +137,11 @@ $(document).ready(function () {
 
         if (inputText.trim() === '') {
             return; // Detiene la ejecución si el campo está vacío
+        }
+
+        if (inputText.length > MAX_INPUT_LENGTH) {
+            showToast('El mensaje es demasiado largo.');
+            return;
         }
 
         isProcessing = true;
@@ -298,11 +319,17 @@ $(document).ready(function () {
         };
 
         try {
+            const headers = {
+                'Content-Type': 'application/json'
+            };
+
+            if (chatApiToken) {
+                headers['X-Chat-Token'] = chatApiToken;
+            }
+
             const response = await fetch('/api/chat', {
                 method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
+                headers: headers,
                 body: JSON.stringify(data)
             });
 
