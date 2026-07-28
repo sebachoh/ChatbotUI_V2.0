@@ -98,7 +98,7 @@ app.post('/api/chat', async (req, res) => {
         }
 
         // Modelos a probar en orden (del mejor al más ligero para evitar cuotas)
-        const fallbackModels = ['gemini-flash-latest', 'gemini-2.5-flash', 'gemini-2.5-flash-lite'];
+        const fallbackModels = ['gemini-3.1-flash-lite', 'gemma-4-26b-a4b-it', 'gemini-2.5-flash', 'gemini-2.0-flash'];
         let lastError = null;
 
         const systemMsg = messages.find(m => m.role === 'system')?.content || '';
