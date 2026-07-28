@@ -103,11 +103,13 @@ $(document).ready(function () {
     async function initChatSession() {
         try {
             const response = await fetch('/api/session-token');
-            if (!response.ok) return;
+            if (!response.ok) return false;
             const data = await response.json();
             chatApiToken = data.token || null;
+            return Boolean(chatApiToken);
         } catch (error) {
             console.warn('No se pudo obtener el token de sesión del chat.');
+            return false;
         }
     }
 
@@ -310,7 +312,11 @@ $(document).ready(function () {
     });
 
     // Petición al servidor backend (Proxy seguro)
-    async function sendChatCompletion(chatHistory) {
+    async function sendChatCompletion(chatHistory, retryOnUnauthorized) {
+        if (retryOnUnauthorized === undefined) {
+            retryOnUnauthorized = true;
+        }
+
         const data = {
             messages: [
                 ...chatHistory
@@ -332,6 +338,13 @@ $(document).ready(function () {
                 headers: headers,
                 body: JSON.stringify(data)
             });
+
+            if (response.status === 401 && retryOnUnauthorized) {
+                const refreshed = await initChatSession();
+                if (refreshed) {
+                    return sendChatCompletion(chatHistory, false);
+                }
+            }
 
             if (!response.ok) {
                 const errData = await response.json().catch(() => ({}));

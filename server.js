@@ -1,4 +1,5 @@
 require('dotenv').config();
+const crypto = require('crypto');
 const express = require('express');
 const cors = require('cors');
 const fs = require('fs');
@@ -11,6 +12,13 @@ const { getEmbedding } = require('./src/rag/embeddings');
 const app = express();
 const PORT = process.env.PORT || 3001;
 const CHAT_API_TOKEN = process.env.CHAT_API_TOKEN;
+
+if (process.env.NODE_ENV === 'production') {
+    if (!CHAT_API_TOKEN || CHAT_API_TOKEN.includes('genera-un-token')) {
+        console.error('[Seguridad] CHAT_API_TOKEN es obligatorio en producción.');
+        process.exit(1);
+    }
+}
 
 const MAX_MESSAGES = 50;
 const MAX_MESSAGE_LENGTH = 4000;
@@ -36,8 +44,12 @@ const allowedOrigins = process.env.ALLOWED_ORIGINS
     ? process.env.ALLOWED_ORIGINS.split(',').map(normalizeOrigin)
     : defaultAllowedOrigins;
 
-function isAllowedOrigin(origin) {
+function isCorsAllowedOrigin(origin) {
     return !origin || allowedOrigins.includes(normalizeOrigin(origin));
+}
+
+function isStrictAllowedOrigin(origin) {
+    return Boolean(origin) && allowedOrigins.includes(normalizeOrigin(origin));
 }
 
 function isAllowedReferer(referer) {
@@ -48,6 +60,23 @@ function isAllowedReferer(referer) {
     } catch {
         return false;
     }
+}
+
+function hasTrustedBrowserOrigin(req) {
+    const origin = req.get('Origin');
+    const referer = req.get('Referer');
+    return isStrictAllowedOrigin(origin) || isAllowedReferer(referer);
+}
+
+function tokensMatch(provided, expected) {
+    if (!provided || !expected) return false;
+
+    const providedBuffer = Buffer.from(provided);
+    const expectedBuffer = Buffer.from(expected);
+
+    if (providedBuffer.length !== expectedBuffer.length) return false;
+
+    return crypto.timingSafeEqual(providedBuffer, expectedBuffer);
 }
 
 function validateMessages(messages) {
@@ -88,7 +117,7 @@ function requireChatToken(req, res, next) {
     }
 
     const token = req.get('X-Chat-Token');
-    if (!token || token !== CHAT_API_TOKEN) {
+    if (!tokensMatch(token, CHAT_API_TOKEN)) {
         return res.status(401).json({ error: 'No autorizado.' });
     }
 
@@ -128,11 +157,19 @@ const chatLimiter = rateLimit({
     message: { error: 'Se ha excedido el límite de mensajes. Por favor, intenta de nuevo más tarde.' }
 });
 
+const sessionTokenLimiter = rateLimit({
+    windowMs: 10 * 60 * 1000,
+    max: 20,
+    standardHeaders: true,
+    legacyHeaders: false,
+    message: { error: 'Demasiadas solicitudes de sesión. Intenta de nuevo más tarde.' }
+});
+
 app.use('/api/', apiLimiter);
 
 const corsOptions = {
     origin(origin, callback) {
-        if (isAllowedOrigin(origin)) {
+        if (isCorsAllowedOrigin(origin)) {
             return callback(null, true);
         }
         console.warn(`[CORS] Origen bloqueado: ${origin}`);
@@ -157,15 +194,12 @@ app.get('/api/config', (req, res) => {
     });
 });
 
-app.get('/api/session-token', (req, res) => {
+app.get('/api/session-token', sessionTokenLimiter, (req, res) => {
     if (!CHAT_API_TOKEN) {
         return res.json({ token: null });
     }
 
-    const origin = req.get('Origin');
-    const referer = req.get('Referer');
-
-    if (!isAllowedOrigin(origin) && !isAllowedReferer(referer)) {
+    if (!hasTrustedBrowserOrigin(req)) {
         return res.status(403).json({ error: 'Origen no permitido.' });
     }
 
