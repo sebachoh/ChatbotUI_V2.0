@@ -65,7 +65,19 @@ function isAllowedReferer(referer) {
 function hasTrustedBrowserOrigin(req) {
     const origin = req.get('Origin');
     const referer = req.get('Referer');
-    return isStrictAllowedOrigin(origin) || isAllowedReferer(referer);
+    if (isStrictAllowedOrigin(origin) || isAllowedReferer(referer)) {
+        return true;
+    }
+
+    // Para peticiones GET del mismo origen donde el navegador omite Origin y Referer
+    const host = req.get('Host');
+    if (host) {
+        const httpsHost = normalizeOrigin(`https://${host}`);
+        const httpHost = normalizeOrigin(`http://${host}`);
+        return allowedOrigins.includes(httpsHost) || allowedOrigins.includes(httpHost);
+    }
+
+    return false;
 }
 
 function tokensMatch(provided, expected) {
@@ -125,6 +137,7 @@ function requireChatToken(req, res, next) {
 }
 
 app.use(helmet({
+    referrerPolicy: { policy: 'strict-origin-when-cross-origin' },
     contentSecurityPolicy: {
         directives: {
             defaultSrc: ["'self'"],
