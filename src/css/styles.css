@@ -225,12 +225,40 @@
   background: #5f8a82;
 }
 
+/* Micro-animations accentuated */
+@keyframes messageSlideIn {
+  0% {
+    opacity: 0;
+    transform: translateY(30px) scale(0.9) rotate(-1deg);
+  }
+
+  70% {
+    transform: translateY(-5px) scale(1.02) rotate(0.5deg);
+  }
+
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1) rotate(0deg);
+  }
+}
+
+.board #chat .robot,
+.board #chat .humano {
+  transition: transform 0.2s ease;
+}
+
+.board #chat .robot:hover,
+.board #chat #cuadrodetexto:hover {
+  transform: translateY(-3px);
+}
+
 .board #chat .robot {
   display: flex;
   justify-content: flex-start;
   align-items: flex-start;
   position: relative;
   max-width: 100%;
+  animation: messageSlideIn 0.3s ease-out forwards;
 }
 
 .board #chat .robot #imagenderobot {
@@ -283,6 +311,7 @@
   display: flex;
   justify-content: flex-end;
   align-items: flex-start;
+  animation: messageSlideIn 0.3s ease-out forwards;
 }
 
 .board #chat .humano #cuadrodetexto {
@@ -381,7 +410,8 @@
 
 .board #campo-de-texto form #divButton button:hover {
   background-color: #0a241f;
-  /* Color al pasar el mouse */
+  transform: scale(1.1);
+  /* Micro-animación de escala */
 }
 
 .board #campo-de-texto form #divButton button:disabled {
@@ -699,4 +729,54 @@
   height: 100%;
   background: linear-gradient(90deg, transparent, #185046, transparent);
   animation: loading 2s linear infinite;
+}
+
+.glass-card {
+  width: auto;
+  /* Cambiado de 240px a auto para chat */
+  max-width: 100%;
+  height: auto;
+  /* Cambiado de 360px a auto para chat */
+  background: rgba(255, 255, 255, 0.15) !important;
+  /* !important para sobreescribir el fondo por defecto */
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-radius: 20px;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  box-shadow:
+    0 8px 32px rgba(0, 0, 0, 0.1),
+    inset 0 1px 0 rgba(255, 255, 255, 0.5),
+    inset 0 -1px 0 rgba(255, 255, 255, 0.1),
+    inset 0 0 20px 10px rgba(255, 255, 255, 0.05);
+  /* Reducido la intensidad del resplandor interno */
+  position: relative;
+  overflow: hidden;
+  padding: 10px;
+  /* Asegurar espacio interno */
+}
+
+.glass-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: linear-gradient(90deg,
+      transparent,
+      rgba(255, 255, 255, 0.8),
+      transparent);
+}
+
+.glass-card::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 1px;
+  height: 100%;
+  background: linear-gradient(180deg,
+      rgba(255, 255, 255, 0.8),
+      transparent,
+      rgba(255, 255, 255, 0.3));
 }
