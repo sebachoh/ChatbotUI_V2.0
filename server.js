@@ -1,40 +1,134 @@
 require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
+const fs = require('fs');
+const path = require('path');
+const { VectorStore } = require('./src/rag/vectorStore');
+const { getEmbedding } = require('./src/rag/embeddings');
 
 const app = express();
-const PORT = 3001;
+const PORT = process.env.PORT || 3001;
+
+// Inicializar y cargar el motor RAG
+const vectorStore = new VectorStore();
 
 app.use(cors());
 app.use(express.json());
+app.use(express.static(__dirname));
 
-// Endpoint para obtener la configuración de API
+// Endpoint de estado de la aplicación (Sin exponer claves secretas)
 app.get('/api/config', (req, res) => {
     res.json({
-        // AnythingLLM API Key (para el chatbot)
-        apiKey: process.env.API_KEY_LLM,
-        apiUrl: process.env.API_URL || 'http://localhost:3001/api/v1/openai/chat/completions',
-
-        // Gemini API Key (disponible si se necesita en el futuro)
-        geminiApiKey: process.env.API_KEY
+        status: 'ok',
+        service: 'Mecani Chatbot API Proxy with RAG',
+        provider: 'Google AI Studio (Gemini)',
+        documentsLoaded: vectorStore.documents.length
     });
 });
 
-// Proxy para la API de AnythingLLM (opcional, más seguro)
+// Proxy seguro para la API de Gemini (Google AI Studio)
 app.post('/api/chat', async (req, res) => {
     try {
-        const response = await fetch(process.env.API_URL, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${process.env.API_KEY_LLM}`
-            },
-            body: JSON.stringify(req.body)
-        });
+        const apiKey = process.env.API_KEY || process.env.API_KEY_LLM;
 
-        const data = await response.json();
-        res.json(data);
+        if (!apiKey || apiKey.includes('tu-api-key')) {
+            return res.status(400).json({
+                error: 'La API_KEY de Gemini no está configurada en el archivo .env del servidor.'
+            });
+        }
+
+        const messages = req.body.messages || [];
+        
+        // --- MOTOR RAG: Búsqueda de Contexto ---
+        let contextText = '';
+        if (messages.length > 0 && vectorStore.documents.length > 0) {
+            try {
+                const lastUserMessage = messages[messages.length - 1].content;
+                const queryEmbedding = await getEmbedding(lastUserMessage, apiKey);
+                
+                if (queryEmbedding) {
+                    const topResults = vectorStore.similaritySearch(queryEmbedding, 3);
+                    if (topResults.length > 0) {
+                        contextText = "\n\n--- INFORMACIÓN OFICIAL PARA RESPONDER ---\n" +
+                            topResults.map(r => r.text).join("\n\n");
+                    }
+                }
+            } catch (err) {
+                console.error('Error durante la búsqueda vectorial:', err);
+                // Si falla el RAG, continuamos sin contexto adicional
+            }
+        }
+        
+        // Leer el system prompt desde el archivo de configuración
+        let baseSystemPrompt = "Eres Mecani."; // Fallback
+        try {
+            baseSystemPrompt = fs.readFileSync(path.join(__dirname, 'prompt.txt'), 'utf-8');
+        } catch(e) {
+            console.warn("No se pudo leer prompt.txt, usando fallback.");
+        }
+
+        // Crear el mensaje de sistema definitivo combinando personalidad y contexto
+        const finalSystemMessage = baseSystemPrompt + (contextText ? ("\n\n--- CONTEXTO OFICIAL ---\n" + contextText) : "");
+        
+        // Agregar o reemplazar el mensaje de sistema en la lista de mensajes
+        const systemMessageIndex = messages.findIndex(m => m.role === 'system');
+        if (systemMessageIndex !== -1) {
+            messages[systemMessageIndex].content = finalSystemMessage;
+        } else {
+            messages.unshift({ role: 'system', content: finalSystemMessage });
+        }
+
+        // Modelos a probar en orden (del mejor al más ligero para evitar cuotas)
+        const fallbackModels = ['gemini-flash-latest', 'gemini-2.5-flash', 'gemini-2.5-flash-lite'];
+        let lastError = null;
+
+        const systemMsg = messages.find(m => m.role === 'system')?.content || '';
+        const userContents = messages
+            .filter(m => m.role !== 'system')
+            .map(m => ({
+                role: m.role === 'assistant' ? 'model' : 'user',
+                parts: [{ text: m.content }]
+            }));
+
+        for (const model of fallbackModels) {
+            try {
+                console.log(`Intentando responder usando el modelo nativo: ${model}`);
+                const geminiRes = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        systemInstruction: systemMsg ? { parts: [{ text: systemMsg }] } : undefined,
+                        contents: userContents
+                    })
+                });
+
+                if (geminiRes.ok) {
+                    const geminiData = await geminiRes.json();
+                    const candidateText = geminiData.candidates?.[0]?.content?.parts?.[0]?.text || '';
+                    return res.json({ content: candidateText });
+                } else {
+                    const errorData = await geminiRes.json();
+                    console.log(`[Error Payload] de ${model}:`, JSON.stringify(errorData));
+                    if (geminiRes.status === 429) {
+                        console.warn(`[Quota Exceeded] El modelo ${model} agotó la cuota. Pasando al siguiente modelo...`);
+                        lastError = new Error('Quota Exceeded');
+                        continue;
+                    }
+                    console.warn(`[API Error] Fallo con ${model}:`, errorData.error?.message);
+                    lastError = new Error(errorData.error?.message || `Error con ${model}`);
+                    continue;
+                }
+            } catch (err) {
+                console.warn(`Error de red/ejecución con el modelo ${model}:`, err.message);
+                lastError = err;
+            }
+        }
+
+        // Si todos los modelos fallan
+        throw new Error(`Todos los modelos de respaldo fallaron por cuota o indisponibilidad. Último error: ${lastError.message}`);
+
     } catch (error) {
+        console.error('Error en el proxy de /api/chat:', error);
         res.status(500).json({ error: error.message });
     }
 });

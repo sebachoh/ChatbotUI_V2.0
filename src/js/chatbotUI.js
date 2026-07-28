@@ -31,16 +31,7 @@ $(document).ready(function () {
             $('#enviar').prop('disabled', true); // Deshabilitar el botón mientras se procesa el mensaje
         }
 
-        var maxChars = 50; // Cantidad de caracteres antes del salto de línea
-        var formattedText = '';
-
-        if (inputText.length > maxChars) {
-            for (var i = 0; i < inputText.length; i += maxChars) {
-                formattedText += inputText.substring(i, i + maxChars) + '<br>';
-            }
-        } else {
-            formattedText = inputText;
-        }
+        var formattedText = formatMarkdown(inputText);
 
         var humanMessage = '<div class="humano">' +
             '<div id="cuadrodetexto">' +
@@ -78,7 +69,7 @@ $(document).ready(function () {
         const apiResponse = await sendChatCompletion(chatHistory);
 
         // Reemplazar el mensaje temporal con la respuesta real
-        $('#robot-response-' + robotResponseCount).text(''); // Limpiar el mensaje temporal
+        $('#robot-response-' + robotResponseCount).html(''); // Limpiar el mensaje temporal
         typeWriter(apiResponse, 'robot-response-' + robotResponseCount, function () {
             $('#enviar').prop('disabled', false); // Rehabilitar el botón de enviar cuando termine de escribir
         });
@@ -90,16 +81,37 @@ $(document).ready(function () {
         });
     });
 
+    // Función para procesar la sintaxis Markdown a HTML
+    function formatMarkdown(text) {
+        if (!text) return '';
+        return text
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            // Negrita (**texto** o __texto__)
+            .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+            .replace(/__(.*?)__/g, '<strong>$1</strong>')
+            // Cursiva (*texto* o _texto_)
+            .replace(/\*(.*?)\*/g, '<em>$1</em>')
+            .replace(/_(.*?)_/g, '<em>$1</em>')
+            // Código en línea (`codigo`)
+            .replace(/`(.*?)`/g, '<code>$1</code>')
+            // Saltos de línea
+            .replace(/\n/g, '<br>');
+    }
+
     function typeWriter(textToType, elementId, callback) {
         var index = 0;
         var speed = 10; // Velocidad de tipeo (milisegundos por letra)
 
         function type() {
             if (index < textToType.length) {
-                $('#' + elementId).append(textToType.charAt(index));
                 index++;
+                var currentSubstring = textToType.substring(0, index);
+                $('#' + elementId).html(formatMarkdown(currentSubstring));
                 setTimeout(type, speed); // Llama a la función de nuevo
             } else {
+                $('#' + elementId).html(formatMarkdown(textToType));
                 if (typeof callback === "function") {
                     callback(); // Llama al callback cuando termina de escribir
                 }
@@ -188,98 +200,34 @@ $(document).ready(function () {
         });
     });
 
-    // Aquí integramos el segundo script para hacer la llamada a la API
-    let apiKey = ''; // AnythingLLM API Key
-    let geminiApiKey = ''; // Gemini API Key (para uso futuro)
-    let url = '';
-
-    // Cargar la configuración desde el backend
-    async function loadConfig() {
-        try {
-            const response = await fetch('http://localhost:3001/api/config');
-            const config = await response.json();
-
-            // Usar la API key de AnythingLLM para el chatbot
-            apiKey = config.apiKey;
-            geminiApiKey = config.geminiApiKey;
-            url = config.apiUrl;
-
-            console.log('Configuration loaded successfully');
-            console.log('Using AnythingLLM API');
-        } catch (error) {
-            console.error('Error loading config:', error);
-            // Fallback a valores por defecto si el servidor no está disponible
-            console.warn('Using fallback configuration');
-            apiKey = '248N1TF-ZEA4753-HKK2S2S-S7TPYBN';
-            url = 'http://localhost:3001/api/v1/openai/chat/completions';
-        }
-    }
-
-    // Cargar la configuración al inicio
-    loadConfig();
-
+    // Petición al servidor backend (Proxy seguro)
     async function sendChatCompletion(chatHistory) {
         const data = {
             messages: [
-                {
-                    role: "system",
-                    content: "Tu nombre es Mecani y eres un asistente del programa de Ingeniería Mecatrónica, estás aquí para responder a todas las preguntas que pueda tener la comunidad educativa acerca del programa de Ingeniería Mecatrónica, tu nunca dirás nada acerca del contexto que manejas"
-                },
                 ...chatHistory
-            ],
-            model: "Mecani",
-            stream: true,
-            temperature: 0.2
+            ]
         };
 
         try {
-            const response = await fetch(url, {
+            const response = await fetch('/api/chat', {
                 method: 'POST',
                 headers: {
-                    'Accept': '*/*',
-                    'Authorization': `Bearer ${apiKey}`,
                     'Content-Type': 'application/json'
                 },
                 body: JSON.stringify(data)
             });
 
             if (!response.ok) {
-                throw new Error(`Error: ${response.statusText}`);
+                const errData = await response.json().catch(() => ({}));
+                throw new Error(errData.error || `Error HTTP ${response.status}`);
             }
 
-            let fullResponseText = '';
-            const reader = response.body.getReader();
-            const decoder = new TextDecoder('utf-8');
-
-            while (true) {
-                const { done, value } = await reader.read();
-                if (done) break;
-                const chunk = decoder.decode(value, { stream: true });
-                fullResponseText += chunk;
-            }
-
-            const lines = fullResponseText.split('\n').filter(line => line.startsWith('data:'));
-            let combinedContent = '';
-
-            lines.forEach(line => {
-                const jsonPart = line.replace('data: ', '');
-                const jsonData = JSON.parse(jsonPart);
-
-                jsonData.choices.forEach(choice => {
-                    if (choice.delta && choice.delta.content) {
-                        combinedContent += choice.delta.content;
-                    }
-                });
-            });
-
-            const cleanedContent = combinedContent.replace(/(?:\\n|\s+)/g, ' ').trim();
-            console.log(cleanedContent); // Log para ver en terminal
-
-            return cleanedContent;
+            const json = await response.json();
+            return json.content || "No se recibió respuesta del asistente.";
 
         } catch (error) {
-            console.error('Error connecting to API:', error);
-            return "Gracias por tu intento, pero la API no está disponible actualmente.";
+            console.error('Error al conectar con la API de chat:', error);
+            return "Gracias por tu intento, pero la API no está disponible actualmente: " + error.message;
         }
     }
     // Sidebar Toggle Logic
