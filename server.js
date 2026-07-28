@@ -3,6 +3,8 @@ const express = require('express');
 const cors = require('cors');
 const fs = require('fs');
 const path = require('path');
+const helmet = require('helmet');
+const rateLimit = require('express-rate-limit');
 const { VectorStore } = require('./src/rag/vectorStore');
 const { getEmbedding } = require('./src/rag/embeddings');
 
@@ -12,8 +14,25 @@ const PORT = process.env.PORT || 3001;
 // Inicializar y cargar el motor RAG
 const vectorStore = new VectorStore();
 
-app.use(cors());
-app.use(express.json());
+// Seguridad: Añadir cabeceras HTTP de protección (XSS, Clickjacking, etc)
+app.use(helmet({
+    contentSecurityPolicy: false // Desactivado para no romper scripts externos sin configuración estricta
+}));
+
+// Seguridad: Prevenir ataques de fuerza bruta y abusos de API
+const apiLimiter = rateLimit({
+    windowMs: 10 * 60 * 1000, // 10 minutos
+    max: 100, // 100 peticiones por IP
+    message: { error: 'Se ha excedido el límite de consultas. Por favor, intenta de nuevo más tarde.' }
+});
+app.use('/api/', apiLimiter);
+
+// Seguridad: Configurar CORS (Acepta orígenes permitidos por env, o todos si no está configurado)
+const corsOptions = process.env.ALLOWED_ORIGIN ? { origin: process.env.ALLOWED_ORIGIN } : {};
+app.use(cors(corsOptions));
+
+// Seguridad: Limitar tamaño de body para prevenir ataques de saturación de memoria
+app.use(express.json({ limit: '100kb' }));
 app.use(express.static(__dirname));
 
 // Endpoint de estado de la aplicación (Sin exponer claves secretas)
@@ -59,10 +78,10 @@ app.post('/api/chat', async (req, res) => {
             }
         }
         
-        // Leer el system prompt desde el archivo de configuración
+        // Leer el system prompt desde el archivo de configuración asíncronamente (evita bloquear el event loop)
         let baseSystemPrompt = "Eres Mecani."; // Fallback
         try {
-            baseSystemPrompt = fs.readFileSync(path.join(__dirname, 'prompt.txt'), 'utf-8');
+            baseSystemPrompt = await fs.promises.readFile(path.join(__dirname, 'prompt.txt'), 'utf-8');
         } catch(e) {
             console.warn("No se pudo leer prompt.txt, usando fallback.");
         }

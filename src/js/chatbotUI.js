@@ -81,10 +81,10 @@ $(document).ready(function () {
         });
     });
 
-    // Función para procesar la sintaxis Markdown a HTML
+    // Función para procesar la sintaxis Markdown a HTML (Protegido contra XSS)
     function formatMarkdown(text) {
         if (!text) return '';
-        return text
+        const htmlText = text
             .replace(/&/g, '&amp;')
             .replace(/</g, '&lt;')
             .replace(/>/g, '&gt;')
@@ -98,6 +98,9 @@ $(document).ready(function () {
             .replace(/`(.*?)`/g, '<code>$1</code>')
             // Saltos de línea
             .replace(/\n/g, '<br>');
+            
+        // Usar DOMPurify para eliminar posibles inyecciones de script
+        return typeof DOMPurify !== 'undefined' ? DOMPurify.sanitize(htmlText) : htmlText;
     }
 
     function typeWriter(textToType, elementId, callback) {
@@ -227,7 +230,8 @@ $(document).ready(function () {
 
         } catch (error) {
             console.error('Error al conectar con la API de chat:', error);
-            return "Gracias por tu intento, pero la API no está disponible actualmente: " + error.message;
+            $('#robot-response-' + robotResponseCount).css('color', '#ff4d4f'); // Visual Error Indicator
+            return "⚠️ El sistema de comunicación está experimentando fallas en este momento: " + error.message;
         }
     }
     // Sidebar Toggle Logic
