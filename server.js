@@ -27,8 +27,34 @@ const apiLimiter = rateLimit({
 });
 app.use('/api/', apiLimiter);
 
-// Seguridad: Configurar CORS (Acepta orígenes permitidos por env, o todos si no está configurado)
-const corsOptions = process.env.ALLOWED_ORIGIN ? { origin: process.env.ALLOWED_ORIGIN } : {};
+// Seguridad: CORS estricto — solo orígenes explícitamente permitidos
+const normalizeOrigin = (origin) => origin.trim().replace(/\/+$/, '');
+
+const defaultAllowedOrigins = process.env.NODE_ENV === 'production'
+    ? ['https://mecani.onrender.com']
+    : [
+        'https://mecani.onrender.com',
+        'http://localhost:3001',
+        'http://127.0.0.1:3001'
+    ];
+
+const allowedOrigins = process.env.ALLOWED_ORIGINS
+    ? process.env.ALLOWED_ORIGINS.split(',').map(normalizeOrigin)
+    : defaultAllowedOrigins;
+
+const corsOptions = {
+    origin(origin, callback) {
+        // Peticiones same-origin o sin cabecera Origin (curl, health checks)
+        if (!origin || allowedOrigins.includes(normalizeOrigin(origin))) {
+            return callback(null, true);
+        }
+        console.warn(`[CORS] Origen bloqueado: ${origin}`);
+        return callback(null, false);
+    },
+    methods: ['GET', 'POST'],
+    allowedHeaders: ['Content-Type'],
+    maxAge: 86400 // cache preflight 24h
+};
 app.use(cors(corsOptions));
 
 // Seguridad: Limitar tamaño de body para prevenir ataques de saturación de memoria
