@@ -57,6 +57,7 @@ app.post('/api/chat', async (req, res) => {
         }
 
         const messages = req.body.messages || [];
+        const language = req.body.language;
         
         // --- MOTOR RAG: Búsqueda de Contexto ---
         let contextText = '';
@@ -87,7 +88,11 @@ app.post('/api/chat', async (req, res) => {
         }
 
         // Crear el mensaje de sistema definitivo combinando personalidad y contexto
-        const finalSystemMessage = baseSystemPrompt + (contextText ? ("\n\n--- CONTEXTO OFICIAL ---\n" + contextText) : "");
+        let finalSystemMessage = baseSystemPrompt + (contextText ? ("\n\n--- CONTEXTO OFICIAL ---\n" + contextText) : "");
+        
+        if (language) {
+            finalSystemMessage += `\n\n--- INSTRUCCIÓN OBLIGATORIA ---\nDebes responder SIEMPRE a las preguntas del usuario en este idioma: ${language}. Si el usuario te habla en un idioma diferente, tradúcelo y respóndele en ${language}.`;
+        }
         
         // Agregar o reemplazar el mensaje de sistema en la lista de mensajes
         const systemMessageIndex = messages.findIndex(m => m.role === 'system');
